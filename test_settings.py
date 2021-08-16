@@ -2,13 +2,8 @@ HELPER_SETTINGS = {
     "TIME_ZONE": "America/Chicago",
     "INSTALLED_APPS": [
         "djangocms_content_expiry",
+        "djangocms_versioning",
     ],
-    "MIGRATION_MODULES": {
-        "auth": None,
-        "cms": None,
-        "menus": None,
-        "djangocms_content_expiry": None,
-    },
     "CMS_PERMISSION": True,
     "LANGUAGES": (
         ("en", "English"),
@@ -42,9 +37,9 @@ HELPER_SETTINGS = {
 
 
 def run():
-    from djangocms_helper import runner
+    from app_helper import runner
 
-    runner.cms("djangocms_content_expiry", extra_args=[])
+    runner.cms("djangocms_content_expiry")
 
 
 if __name__ == "__main__":
