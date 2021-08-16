@@ -28,7 +28,7 @@ jobs:
         sudo apt install gettext gcc -y
         python -m pip install --upgrade pip
         pip install pytest
-        pip install -r tests/requirements/${{ matrix.python-version }}
+        pip install -r tests/requirements/${{ matrix.requirements-file }}
         python setup.py install
     - name: Test with python test runner
       run: |
