@@ -15,11 +15,15 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     def title(self, obj):
         """
+        A field to display the content objects title
         """
         return obj.version.content
     title.short_description = _('Title')
 
     def content_type(self, obj):
+        """
+        A field to display the content type as a readable representation
+        """
         return ContentType.objects.get_for_model(
             obj.version.content
         )
@@ -27,12 +31,14 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     def version_state(self, obj):
         """
+        A field to display the version state as a readable representation
         """
         return obj.version.get_state_display()
     version_state.short_description = _('Version state')
 
     def version_author(self, obj):
         """
+        A field to display the author of the version
         """
         return obj.version.created_by
     version_author.short_description = _('Version author')
