@@ -7,12 +7,17 @@ from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory
 from djangocms_content_expiry.test_utils.polls.factories import PollContentWithVersionFactory
 
 
-class ContentExpiryChangelistFilterTestCase(CMSTestCase):
+class ContentExpiryChangelistTestCase(CMSTestCase):
+    def test_changelist_fields(self):
+        self.assertSetEqual("TODO: Ensure that the fields present match the admin file as it is now", "")
+
+
+class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
 
     def test_expired_filter_default_setting(self):
         self.assertSetEqual("TODO: The is_default settings should be tested and enforced", "")
 
-    def test_expired_filter_view_expired_at_boundaries(self):
+    def test_expired_filter_setting_expired_at_boundaries(self):
         """
         Check the boundaries of the Expired by filter. The dates are
         set to check that only records due to expire are shown with a filter value set at 30 days
@@ -64,5 +69,5 @@ class ContentExpiryChangelistFilterTestCase(CMSTestCase):
             ordered=False,
         )
 
-    def test_expired_filter_view_overdue_boundaries(self):
+    def test_expired_filter_setting_overdue_boundaries(self):
         self.assertSetEqual("TODO: The filter should only show records that are overdue, add values to check the boundaries", "")
