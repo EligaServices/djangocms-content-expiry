@@ -8,6 +8,7 @@ HELPER_SETTINGS = {
         "auth": None,
         "cms": None,
         "menus": None,
+        "djangocms_versioning": None,
         "djangocms_content_expiry": None,
     },
     "CMS_PERMISSION": True,
