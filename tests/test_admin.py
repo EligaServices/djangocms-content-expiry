@@ -9,7 +9,8 @@ class ContentExpiryChangelistFilterTestCase(CMSTestCase):
 
         """
         TODO:
-        - Test with: Create a group of versioned poll entries with different dates, ensure filter boundaries respect the dates
+        - Test with: Create a group of versioned poll entries with different dates, ensure filter boundaries respect
+          the dates
         - Test with a poll that checks the fields int he changelist output the correct values
         """
 
