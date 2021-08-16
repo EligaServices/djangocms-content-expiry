@@ -71,3 +71,9 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
 
     def test_expired_filter_setting_overdue_boundaries(self):
         self.assertSetEqual("TODO: The filter should only show records that are overdue, add values to check the boundaries", "")
+
+    def test_expired_filter_published_always_filtered(self):
+        """
+        All published items should never be shown to the user as they have been expired and acted on
+        """
+        self.assertSetEqual("TODO: Implement", "")
