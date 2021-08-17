@@ -11,6 +11,7 @@ from djangocms_versioning.versionables import _cms_extension
 class ContentTypeFilter(admin.SimpleListFilter):
     title = _("Content Type")
     parameter_name = "content_type"
+    template = 'djangocms_content_expiry/multiselect-filter.html'
 
     def lookups(self, request, model_admin):
         list = []
@@ -23,21 +24,37 @@ class ContentTypeFilter(admin.SimpleListFilter):
         content_type = self.value()
         if not content_type:
             return queryset
-        return queryset.filter(version__content_type=content_type)
+        return queryset.filter(version__content_type__in=content_type.split(','))
+
+    def value_as_list(self):
+        return self.value().split(',') if self.value() else []
+
+    def _update_query(self, changelist, include=None, exclude=None):
+        selected_list = self.value_as_list()
+        if include and include not in selected_list:
+            selected_list.append(include)
+        if exclude and exclude in selected_list:
+            selected_list.remove(exclude)
+        if selected_list:
+            compiled_selection = ','.join(selected_list)
+            return changelist.get_query_string({self.parameter_name: compiled_selection})
+        else:
+            return changelist.get_query_string(remove=[self.parameter_name])
 
     def choices(self, changelist):
         yield {
-            "selected": self.value() is None,
-            "query_string": changelist.get_query_string(remove=[self.parameter_name]),
-            "display": _("All"),
+            'selected': self.value() is None,
+            'query_string': changelist.get_query_string(remove=[self.parameter_name]),
+            'display': 'All',
+            'initial': True,
         }
         for lookup, title in self.lookup_choices:
             yield {
-                "selected": self.value() == str(lookup),
-                "query_string": changelist.get_query_string(
-                    {self.parameter_name: lookup}
-                ),
-                "display": title,
+                'selected': str(lookup) in self.value_as_list(),
+                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
+                'include_query_string': self._update_query(changelist, include=str(lookup)),
+                'exclude_query_string': self._update_query(changelist, exclude=str(lookup)),
+                'display': title,
             }
 
 
