@@ -1,7 +1,6 @@
 import factory
-from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyText
-
 from djangocms_versioning.models import Version
+from factory.fuzzy import FuzzyChoice, FuzzyText
 
 from djangocms_content_expiry.test_utils.factories import AbstractVersionFactory
 

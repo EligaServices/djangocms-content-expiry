@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
-
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
+from datetime import datetime, timedelta
 from djangocms_versioning.constants import VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
 
@@ -120,12 +119,12 @@ class ExpiredFilter(admin.SimpleListFilter):
             queryset = queryset.filter(
                 expires__lte=date_to,
                 expires__gt=date_from,
-                #version__state="published",
+                # version__state="published",
             )
         elif self.value() == OVERDUE or self._is_default(OVERDUE):
             queryset = queryset.filter(
                 expires__lte=date_from,
-                #version__state="published",
+                # version__state="published",
             )
         return queryset
 

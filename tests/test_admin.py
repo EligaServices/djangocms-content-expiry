@@ -1,10 +1,11 @@
-import datetime
-
 from cms.test_utils.testcases import CMSTestCase
+import datetime
 
 from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory
-from djangocms_content_expiry.test_utils.polls.factories import PollContentWithVersionFactory
+from djangocms_content_expiry.test_utils.polls.factories import (
+    PollContentWithVersionFactory
+)
 
 
 class ContentExpiryChangelistTestCase(CMSTestCase):
@@ -98,7 +99,8 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         )
 
     def test_expired_filter_setting_overdue_boundaries(self):
-        self.assertSetEqual("TODO: The filter should only show records that are overdue, add values to check the boundaries", "")
+        self.assertSetEqual("TODO: The filter should only show records that are overdue, add values to check the "
+                            "boundaries", "")
 
     def test_expired_filter_published_always_filtered(self):
         """
@@ -106,11 +108,11 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         """
         delta = datetime.timedelta(days=31)
         expire = datetime.datetime.now() + delta
-        poll_content_6 = PollContentWithVersionFactory(language="en")
-        ContentExpiryFactory(version=poll_content_6.versions.first(), expires=expire)
+        poll_content = PollContentWithVersionFactory(language="en")
+        ContentExpiryFactory(version=poll_content.versions.first(), expires=expire)
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
-        test = response.context["cl"].queryset
+        published_query_set = response.context["cl"].queryset.filter(version__state="published")
 
-        self.assertEqual(len(test), 1)
+        self.assertEqual(len(published_query_set), 0)
