@@ -3,9 +3,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from rangefilter.filters import DateRangeFilter
-
-from .models import ContentExpiry
-
 from .filters import ContentTypeFilter, VersionStateFilter
 from .models import ContentExpiry
 

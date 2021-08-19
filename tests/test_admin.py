@@ -1,10 +1,11 @@
 from cms.test_utils.testcases import CMSTestCase
+
 import datetime
 
 from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory
 from djangocms_content_expiry.test_utils.polls.factories import (
-    PollContentWithVersionFactory
+    PollContentWithVersionFactory,
 )
 
 
