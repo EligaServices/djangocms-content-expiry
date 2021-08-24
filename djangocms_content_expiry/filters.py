@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 from djangocms_versioning.constants import VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
 
