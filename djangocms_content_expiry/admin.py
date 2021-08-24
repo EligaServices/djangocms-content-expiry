@@ -15,6 +15,11 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     list_display_links = None
     list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter)
 
+    class Media:
+        css = {
+            'all': ('css/date_filter.css',)
+        }
+
     def title(self, obj):
         """
         A field to display the content objects title
