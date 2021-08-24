@@ -66,6 +66,7 @@ class VersionStateFilter(admin.SimpleListFilter):
     title = _("Version State")
     parameter_name = "state"
     default_filter_value = FILTER_DEFAULT
+    template = 'djangocms_content_expiry/multiselect-filter.html'
 
     def _is_default(self, filter_value):
         if self.default_filter_value == filter_value and self.value() is None:
@@ -81,6 +82,21 @@ class VersionStateFilter(admin.SimpleListFilter):
             return queryset.filter(version__state=state)
         return queryset
 
+    def value_as_list(self):
+        return self.value().split(',') if self.value() else []
+
+    def _update_query(self, changelist, include=None, exclude=None):
+        selected_list = self.value_as_list()
+        if include and include not in selected_list:
+            selected_list.append(include)
+        if exclude and exclude in selected_list:
+            selected_list.remove(exclude)
+        if selected_list:
+            compiled_selection = ','.join(selected_list)
+            return changelist.get_query_string({self.parameter_name: compiled_selection})
+        else:
+            return changelist.get_query_string(remove=[self.parameter_name])
+
     def choices(self, changelist):
         yield {
             "selected": self.value() is None,
@@ -94,6 +110,8 @@ class VersionStateFilter(admin.SimpleListFilter):
                 "query_string": changelist.get_query_string(
                     {self.parameter_name: lookup}
                 ),
+                'include_query_string': self._update_query(changelist, include=str(lookup_value)),
+                'exclude_query_string': self._update_query(changelist, exclude=str(lookup_value)),
                 "display": title,
             }
 
