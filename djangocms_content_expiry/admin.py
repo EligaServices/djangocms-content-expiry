@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rangefilter.filters import DateRangeFilter
 
-from .filters import ContentTypeFilter, VersionStateFilter, AuthorFilter
+from .filters import AuthorFilter, ContentTypeFilter, VersionStateFilter
 from .models import ContentExpiry
 
 
