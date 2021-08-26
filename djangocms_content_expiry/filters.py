@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_versioning.constants import VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
 
-from . import constants
+from . import constants, helpers
 
 
 class ContentTypeFilter(admin.SimpleListFilter):
@@ -67,6 +67,11 @@ class VersionStateFilter(admin.SimpleListFilter):
     parameter_name = "state"
     default_filter_value = FILTER_DEFAULT
     template = 'djangocms_content_expiry/multiselect-filter.html'
+
+    class Media:
+        css = {
+            'all': ('css/admin/new_css.css',)
+        }
 
     def _is_default(self, filter_value):
         if self.default_filter_value == filter_value and self.value() is None:
@@ -168,3 +173,26 @@ class VersionStateFilter(admin.SimpleListFilter):
 #                 ),
 #                 "display": title,
 #             }
+
+
+class AuthorFilter(admin.SimpleListFilter):
+    """
+    Provides a author filter limited to those users who have added expiration dates
+    """
+
+    title = _("Author")
+    parameter_name = "created_by"
+
+    def lookups(self, request, model_admin):
+        from django.utils.encoding import force_text
+        options = []
+        for user in helpers.get_authors():
+            options.append(
+                (force_text(user.pk), user.get_full_name() or user.get_username())
+            )
+        return options
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(author=self.value()).distinct()
+        return queryset

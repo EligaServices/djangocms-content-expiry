@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rangefilter.filters import DateRangeFilter
 
-from .filters import ContentTypeFilter, VersionStateFilter
+from .filters import ContentTypeFilter, VersionStateFilter, AuthorFilter
 from .models import ContentExpiry
 
 
@@ -13,7 +13,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     list_display = ['title', 'content_type', 'expires', 'version_state', 'version_author']
     # Disable automatically linking to the Expiry record
     list_display_links = None
-    list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter)
+    list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter, AuthorFilter)
 
     class Media:
         css = {
