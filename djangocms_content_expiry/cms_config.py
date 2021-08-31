@@ -1,6 +1,14 @@
 from django.conf import settings
 
-from cms.app_base import CMSAppConfig
+from cms.app_base import CMSAppConfig, CMSAppExtension
+
+
+class ContentExpiryAppExtension(CMSAppExtension):
+    def __init__(self):
+        from .monkeypatch import admin as monkeypatch_admin
+
+    def configure_app(self, cms_config):
+        pass
 
 
 class ContentExpiryAppConfig(CMSAppConfig):
