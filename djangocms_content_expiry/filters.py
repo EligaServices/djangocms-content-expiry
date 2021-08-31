@@ -64,7 +64,7 @@ class ContentTypeFilter(admin.SimpleListFilter):
 class VersionStateFilter(admin.SimpleListFilter):
     title = _("Version State")
     parameter_name = "state"
-    default_filter_value = FILTER_DEFAULT
+    default_filter_value = PUBLISHED
     template = 'djangocms_content_expiry/multiselect-filter.html'
 
     class Media:
