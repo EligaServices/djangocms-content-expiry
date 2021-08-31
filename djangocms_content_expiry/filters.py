@@ -59,7 +59,6 @@ class ContentTypeFilter(admin.SimpleListFilter):
             }
 
 
-FILTER_DEFAULT = constants.VERSION_STATES
 
 
 class VersionStateFilter(admin.SimpleListFilter):
