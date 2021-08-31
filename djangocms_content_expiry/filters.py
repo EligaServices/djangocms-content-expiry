@@ -176,7 +176,7 @@ class VersionStateFilter(admin.SimpleListFilter):
 
 class AuthorFilter(admin.SimpleListFilter):
     """
-    Provides a author filter limited to those users who have added expiration dates
+    An author filter limited to those users who have added expiration dates
     """
     title = _("Author")
     parameter_name = "created_by"
