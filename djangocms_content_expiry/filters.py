@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
-from djangocms_versioning.constants import VERSION_STATES, PUBLISHED
+from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
 
 from . import helpers
