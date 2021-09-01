@@ -47,66 +47,81 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
     def test_expired_filter_default_setting(self):
         self.assertSetEqual("TODO: The is_default settings should be tested and enforced", "")
 
-    def test_expired_filter_setting_expired_at_boundaries(self):
+    def test_expired_filter_setting_expired_at_range_boundaries(self):
         """
-        Check the boundaries of the Expired by filter. The dates are
+        Check the boundaries of the Expired by date range filter. The dates are
         set to check that only records due to expire are shown with a filter value set at 30 days
         """
+        from_date = datetime.datetime.now()
+        to_date = from_date + datetime.timedelta(days=30)
+
         # Record that is expired by 1 day
         delta_1 = datetime.timedelta(days=1)
-        expire_at_1 = datetime.datetime.now() - delta_1
+        expire_at_1 = from_date - delta_1
         poll_content_1 = PollContentWithVersionFactory(language="en")
         content_expiry_1 = ContentExpiryFactory(version=poll_content_1.versions.first(), expires=expire_at_1)
 
         # Record that is set to expire today
-        expire_at_2 = datetime.datetime.now()
+        expire_at_2 = from_date
         poll_content_2 = PollContentWithVersionFactory(language="en")
         content_expiry_2 = ContentExpiryFactory(version=poll_content_2.versions.first(), expires=expire_at_2)
 
         # Record that is set to expire tomorrow
         delta_3 = datetime.timedelta(days=1)
-        expire_at_3 = datetime.datetime.now() + delta_3
+        expire_at_3 = from_date + delta_3
         poll_content_3 = PollContentWithVersionFactory(language="en")
         content_expiry_3 = ContentExpiryFactory(version=poll_content_3.versions.first(), expires=expire_at_3)
 
         # Record that is set to expire in 29 days
         delta_4 = datetime.timedelta(days=29)
-        expire_at_4 = datetime.datetime.now() + delta_4
+        expire_at_4 = from_date + delta_4
         poll_content_4 = PollContentWithVersionFactory(language="en")
         content_expiry_4 = ContentExpiryFactory(version=poll_content_4.versions.first(), expires=expire_at_4)
 
         # Record that is set to expire in 30 days
         delta_5 = datetime.timedelta(days=30)
-        expire_at_5 = datetime.datetime.now() + delta_5
+        expire_at_5 = from_date + delta_5
         poll_content_5 = PollContentWithVersionFactory(language="en")
         content_expiry_5 = ContentExpiryFactory(version=poll_content_5.versions.first(), expires=expire_at_5)
 
         # Record that is set to expire in 31 days
         delta_6 = datetime.timedelta(days=31)
-        expire_at_6 = datetime.datetime.now() + delta_6
+        expire_at_6 = from_date + delta_6
         poll_content_6 = PollContentWithVersionFactory(language="en")
         ContentExpiryFactory(version=poll_content_6.versions.first(), expires=expire_at_6)
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
+            url_date_range = f"?expires__range__gte={from_date.date()}&expires__range__lte={to_date.date()}"
+            admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+            response = self.client.get(admin_endpoint + url_date_range)
 
-        # content_expiry_6 is not shown because it is after the 30 days
+        # content_expiry_1 and content_expiry_6 are not shown because they are outside of the set
+        # boundary range, content_expiry_1 is before the start and content_expiry_6 is outside of the range.
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
-            [content_expiry_1.pk, content_expiry_2.pk, content_expiry_3.pk,
+            [content_expiry_2.pk, content_expiry_3.pk,
              content_expiry_4.pk, content_expiry_5.pk],
             transform=lambda x: x.pk,
             ordered=False,
         )
 
-    def test_expired_filter_setting_overdue_boundaries(self):
-        """
-        The filter should only show records that are overdue, add values to check the boundaries
-        """
-        self.assertSetEqual("TODO: The filter should only show records that are overdue, add values to check the "
-                            "boundaries", "")
-
     def test_expired_filter_published_always_filtered(self):
+        """
+        All published items should never be shown to the user as they have been expired and acted on
+        """
+        delta = datetime.timedelta(days=31)
+        expire = datetime.datetime.now() + delta
+        poll_content = PollContentWithVersionFactory(language="en")
+        ContentExpiryFactory(version=poll_content.versions.first(), expires=expire)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
+
+        published_query_set = response.context["cl"].queryset.filter(version__state="published")
+
+        self.assertEqual(len(published_query_set), 0)
+
+    def test_author_filter(self):
         """
         All published items should never be shown to the user as they have been expired and acted on
         """

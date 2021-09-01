@@ -28,7 +28,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         return (start_date, end_date)
 
     def get_rangefilter_expires_title(self, request, field_path):
-        return 'By Expiry Date Range'
+        return _("By Expiry Date Range")
 
     def title(self, obj):
         """
