@@ -135,5 +135,5 @@ class AuthorFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(author=self.value()).distinct()
+            return queryset.filter(created_by=self.value()).distinct()
         return queryset
