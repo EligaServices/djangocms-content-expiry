@@ -1,11 +1,15 @@
 from django.utils.translation import ugettext_lazy as _
-from django.template.loader import render_to_string
 
 from djangocms_versioning import admin
 
+from djangocms_content_expiry.models import ContentExpiry
+
 
 def expires(self, obj):
-    return render_to_string('djangocms_content_expiry/admin/expiry_date_icon.html')
+    version = ContentExpiry.objects.filter(version=obj.pk)
+    if version:
+        return version[0].expires
+    return ""
 
 
 expires.short_description = _('expire date')
@@ -14,7 +18,7 @@ admin.VersionAdmin.expire = expires
 
 def get_list_display(func):
     """
-    Register the expire field with the Versioning Admin
+    Register the locked field with the Versioning Admin
     """
 
     def inner(self, request):
