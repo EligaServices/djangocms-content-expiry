@@ -6,11 +6,11 @@ from unittest import skip
 from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.test_utils.factories import (
     ContentExpiryFactory,
-    UserFactory
+    UserFactory,
 )
 from djangocms_content_expiry.test_utils.polls.factories import (
     PollContentWithVersionFactory,
-    PollContentExpiryFactory
+    PollContentExpiryFactory,
 )
 
 
