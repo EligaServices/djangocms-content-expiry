@@ -1,6 +1,7 @@
-from cms.test_utils.testcases import CMSTestCase
-
 import datetime
+from unittest import skip
+
+from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory
@@ -44,6 +45,7 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
 
 class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
 
+    @skip("FIXME: TBD")
     def test_expired_filter_default_setting(self):
         self.assertSetEqual("TODO: The is_default settings should be tested and enforced", "")
 
@@ -123,16 +125,22 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
 
     def test_author_filter(self):
         """
-        All published items should never be shown to the user as they have been expired and acted on
+        Author filter should only show selected author's results
         """
-        delta = datetime.timedelta(days=31)
-        expire = datetime.datetime.now() + delta
-        poll_content = PollContentWithVersionFactory(language="en")
-        ContentExpiryFactory(version=poll_content.versions.first(), expires=expire)
+        delta1 = datetime.timedelta(days=31)
+        expire1 = datetime.datetime.now() + delta1
+        poll_content1 = PollContentWithVersionFactory(language="en")
+        expiry_object1 = ContentExpiryFactory(version=poll_content1.versions.first(), expires=expire1)
+
+        delta2 = datetime.timedelta(days=31)
+        expire2 = datetime.datetime.now() + delta2
+        poll_content2 = PollContentWithVersionFactory(language="en")
+        expiry_object2 = ContentExpiryFactory(version=poll_content2.versions.first(), expires=expire2)
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
 
-        published_query_set = response.context["cl"].queryset.filter(version__state="published")
+        # Query count should only show expiry_object1 as it should match the author selected
+        published_query_set = response.context["cl"].queryset.filter(created_by=expiry_object1.created_by)
 
-        self.assertEqual(len(published_query_set), 0)
+        self.assertEqual(len(published_query_set), 1)

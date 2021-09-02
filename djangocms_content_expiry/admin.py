@@ -1,9 +1,8 @@
-import datetime
-
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
+import datetime
 from rangefilter.filters import DateRangeFilter
 
 from .filters import AuthorFilter, ContentTypeFilter, VersionStateFilter
@@ -25,7 +24,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_rangefilter_expires_default(self, request):
         start_date = datetime.datetime.now() - datetime.timedelta(30)
         end_date = datetime.datetime.now()
-        return (start_date, end_date)
+        return start_date, end_date
 
     def get_rangefilter_expires_title(self, request, field_path):
         return _("By Expiry Date Range")
