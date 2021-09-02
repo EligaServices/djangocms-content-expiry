@@ -45,7 +45,7 @@ class ContentTypeFilter(admin.SimpleListFilter):
         yield {
             'selected': self.value() is None,
             'query_string': changelist.get_query_string(remove=[self.parameter_name]),
-            'display': 'All',
+            'display': _('All'),
             'initial': True,
         }
         for lookup, title in self.lookup_choices:
@@ -59,6 +59,9 @@ class ContentTypeFilter(admin.SimpleListFilter):
 
 
 class VersionStateFilter(admin.SimpleListFilter):
+
+
+
     title = _("Version State")
     parameter_name = "state"
     default_filter_value = PUBLISHED
@@ -100,7 +103,6 @@ class VersionStateFilter(admin.SimpleListFilter):
 
     def choices(self, changelist):
         yield {
-            "selected": self.value() is None,
             "query_string": changelist.get_query_string(remove=[self.parameter_name]),
             "display": _("All"),
         }
