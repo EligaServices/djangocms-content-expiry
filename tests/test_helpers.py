@@ -1,8 +1,7 @@
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
-
 from djangocms_content_expiry.helpers import get_authors
+from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
 
 class ContentExpiryHelpersTestCase(CMSTestCase):
