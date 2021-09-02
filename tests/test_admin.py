@@ -366,7 +366,7 @@ class ContentExpiryChangelistVersionFilterTestCase(CMSTestCase):
         expiry_unpublished = PollContentExpiryFactory(expires=date, version__state=UNPUBLISHED)
 
         # When draft is selected only the draft entries should be shown
-        version_selection = f"?state=_all_"
+        version_selection = "?state=_all_"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
