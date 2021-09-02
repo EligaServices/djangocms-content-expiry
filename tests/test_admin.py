@@ -4,9 +4,9 @@ import datetime
 from unittest import skip
 
 from djangocms_content_expiry.models import ContentExpiry
-from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory
+from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory, UserFactory
 from djangocms_content_expiry.test_utils.polls.factories import (
-    PollContentWithVersionFactory,
+    PollContentWithVersionFactory, PollContentExpiryFactory
 )
 
 
@@ -123,24 +123,45 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
 
         self.assertEqual(len(published_query_set), 0)
 
+
+class ContentExpiryAuthorFilterTestCase(CMSTestCase):
+
     def test_author_filter(self):
         """
         Author filter should only show selected author's results
         """
-        delta1 = datetime.timedelta(days=31)
-        expire1 = datetime.datetime.now() + delta1
-        poll_content1 = PollContentWithVersionFactory(language="en")
-        expiry_object1 = ContentExpiryFactory(version=poll_content1.versions.first(), expires=expire1)
+        date = datetime.datetime.now() + datetime.timedelta(days=5)
+        # Create records with a set user
+        user = UserFactory()
+        expiry_author = PollContentExpiryFactory.create_batch(2, expires=date, created_by=user)
 
-        delta2 = datetime.timedelta(days=31)
-        expire2 = datetime.datetime.now() + delta2
-        poll_content2 = PollContentWithVersionFactory(language="en")
-        expiry_object2 = ContentExpiryFactory(version=poll_content2.versions.first(), expires=expire2)
+        # Create records with other random users
+        expiry_other_authors = PollContentExpiryFactory.create_batch(4, expires=date)
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
 
-        # Query count should only show expiry_object1 as it should match the author selected
-        published_query_set = response.context["cl"].queryset.filter(created_by=expiry_object1.created_by)
+        # The results should not be filtered
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [expiry_author[0].pk, expiry_author[1].pk,
+             expiry_other_authors[0].pk, expiry_other_authors[1].pk,
+             expiry_other_authors[2].pk, expiry_other_authors[3].pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
 
-        self.assertEqual(len(published_query_set), 1)
+        # Filter by a user
+        author_selection = f"?created_by={user.pk}"
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint + author_selection)
+
+        # When an author is selected in the filter only the author selected content expiry are shown
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [expiry_author[0].pk, expiry_author[1].pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
