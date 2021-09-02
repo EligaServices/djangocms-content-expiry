@@ -64,37 +64,35 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         # Record that is expired by 1 day
         delta_1 = datetime.timedelta(days=1)
         expire_at_1 = from_date - delta_1
-        poll_content_1 = PollContentWithVersionFactory(language="en")
-        ContentExpiryFactory(version=poll_content_1.versions.first(), expires=expire_at_1)
+        PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
 
         # Record that is set to expire today
         expire_at_2 = from_date
-        poll_content_2 = PollContentWithVersionFactory(language="en")
-        content_expiry_2 = ContentExpiryFactory(version=poll_content_2.versions.first(), expires=expire_at_2)
+        poll_content_2 = PollContentExpiryFactory(expires=expire_at_2, version__state=PUBLISHED)
+        version_2 = poll_content_2.version
 
         # Record that is set to expire tomorrow
         delta_3 = datetime.timedelta(days=1)
         expire_at_3 = from_date + delta_3
-        poll_content_3 = PollContentWithVersionFactory(language="en")
-        content_expiry_3 = ContentExpiryFactory(version=poll_content_3.versions.first(), expires=expire_at_3)
+        poll_content_3 = PollContentExpiryFactory(expires=expire_at_3, version__state=PUBLISHED)
+        version_3 = poll_content_3.version
 
         # Record that is set to expire in 29 days
         delta_4 = datetime.timedelta(days=29)
         expire_at_4 = from_date + delta_4
-        poll_content_4 = PollContentWithVersionFactory(language="en")
-        content_expiry_4 = ContentExpiryFactory(version=poll_content_4.versions.first(), expires=expire_at_4)
+        poll_content_4 = PollContentExpiryFactory(expires=expire_at_4, version__state=PUBLISHED)
+        version_4 = poll_content_4.version
 
         # Record that is set to expire in 30 days
         delta_5 = datetime.timedelta(days=30)
         expire_at_5 = from_date + delta_5
-        poll_content_5 = PollContentWithVersionFactory(language="en")
-        content_expiry_5 = ContentExpiryFactory(version=poll_content_5.versions.first(), expires=expire_at_5)
+        poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
+        version_5 = poll_content_5.version
 
         # Record that is set to expire in 31 days
         delta_6 = datetime.timedelta(days=31)
         expire_at_6 = from_date + delta_6
-        poll_content_6 = PollContentWithVersionFactory(language="en")
-        ContentExpiryFactory(version=poll_content_6.versions.first(), expires=expire_at_6)
+        PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
 
         with self.login_user_context(self.get_superuser()):
             url_date_range = f"?expires__range__gte={from_date.date()}&expires__range__lte={to_date.date()}"
@@ -105,8 +103,8 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         # boundary range, content_expiry_1 is before the start and content_expiry_6 is outside of the range.
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
-            [content_expiry_2.pk, content_expiry_3.pk,
-             content_expiry_4.pk, content_expiry_5.pk],
+            [version_2.pk, version_3.pk,
+             version_4.pk, version_5.pk],
             transform=lambda x: x.pk,
             ordered=False,
         )
@@ -137,13 +135,16 @@ class ContentExpiryAuthorFilterTestCase(CMSTestCase):
         date = datetime.datetime.now() + datetime.timedelta(days=5)
         # Create records with a set user
         user = UserFactory()
-        expiry_author = PollContentExpiryFactory.create_batch(2, expires=date, created_by=user)
+        expiry_author = PollContentExpiryFactory.create_batch(2, expires=date, created_by=user,
+                                                              version__state=PUBLISHED)
 
         # Create records with other random users
-        expiry_other_authors = PollContentExpiryFactory.create_batch(4, expires=date)
+        expiry_other_authors = PollContentExpiryFactory.create_batch(4, expires=date, version__state=PUBLISHED)
 
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+        # url_all = f"?state=_all_"
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
+            response = self.client.get(admin_endpoint)
 
         # The results should not be filtered
         self.assertQuerysetEqual(
