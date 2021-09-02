@@ -1,7 +1,7 @@
+from cms.test_utils.testcases import CMSTestCase
+
 import datetime
 from unittest import skip
-
-from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.test_utils.factories import ContentExpiryFactory
