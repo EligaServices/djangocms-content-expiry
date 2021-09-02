@@ -13,6 +13,8 @@ from djangocms_content_expiry.test_utils.polls.factories import (
     PollContentWithVersionFactory,
 )
 
+from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
+
 
 class ContentExpiryChangelistTestCase(CMSTestCase):
     def test_changelist_form_fields(self):
@@ -65,7 +67,7 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         delta_1 = datetime.timedelta(days=1)
         expire_at_1 = from_date - delta_1
         poll_content_1 = PollContentWithVersionFactory(language="en")
-        content_expiry_1 = ContentExpiryFactory(version=poll_content_1.versions.first(), expires=expire_at_1)
+        ContentExpiryFactory(version=poll_content_1.versions.first(), expires=expire_at_1)
 
         # Record that is set to expire today
         expire_at_2 = from_date
@@ -169,3 +171,74 @@ class ContentExpiryAuthorFilterTestCase(CMSTestCase):
             transform=lambda x: x.pk,
             ordered=False,
         )
+
+
+class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
+    def test_content_type_filter(self):
+        """
+        Content type filter should only show relevant content type when filter is selected
+        """
+        date = datetime.datetime.now() + datetime.timedelta(days=5)
+
+        poll_content_expiry = PollContentExpiryFactory(expires=date)
+        version = poll_content_expiry.version
+
+        # Testing page content filter with polls content
+        content_type = f"?content_type={version.content_type.pk}&state={DRAFT}"
+
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint + content_type)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [version.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+
+class ContentExpiryVersionStateFilterTestCase(CMSTestCase):
+    def test_versions_states_set(self):
+        """
+        The default should be to show published versions by default as they are what
+        should be expired, we provide the ability to filter the list to find existing entries
+        or else there would be no other way to find them.
+        """
+        date = datetime.datetime.now() + datetime.timedelta(days=5)
+        # Create draft records
+        expiry_draft_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=DRAFT)
+        # Create published records
+        expiry_published_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=PUBLISHED)
+        # Create archived records
+        expiry_archived_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=ARCHIVED)
+        # Create unublished records
+        expiry_unpublished_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=UNPUBLISHED)
+        # By default only published entries should exist as that is the default setting
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [expiry_published_list[0].pk, expiry_published_list[1].pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+        # When draft is selected only the draft entries should be shown
+        version_selection = f"?state={DRAFT}"
+
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint + version_selection)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [expiry_draft_list[0].pk, expiry_draft_list[1].pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+

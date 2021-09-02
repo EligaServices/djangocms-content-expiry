@@ -49,5 +49,6 @@ class PollContentExpiryFactory(factory.django.DjangoModelFactory):
     created_by = factory.SubFactory(UserFactory)
     version = factory.SubFactory(PollVersionFactory)
     expires = factory.Faker('date_object')
+
     class Meta:
         model = ContentExpiry

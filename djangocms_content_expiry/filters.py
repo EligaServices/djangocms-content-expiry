@@ -8,7 +8,25 @@ from djangocms_versioning.versionables import _cms_extension
 from . import helpers
 
 
-class ContentTypeFilter(admin.SimpleListFilter):
+class SimpleListMultiselectFilter(admin.SimpleListFilter):
+
+    def value_as_list(self):
+        return self.value().split(',') if self.value() else []
+
+    def _update_query(self, changelist, include=None, exclude=None):
+        selected_list = self.value_as_list()
+        if include and include not in selected_list:
+            selected_list.append(include)
+        if exclude and exclude in selected_list:
+            selected_list.remove(exclude)
+        if selected_list:
+            compiled_selection = ','.join(selected_list)
+            return changelist.get_query_string({self.parameter_name: compiled_selection})
+        else:
+            return changelist.get_query_string(remove=[self.parameter_name])
+
+
+class ContentTypeFilter(SimpleListMultiselectFilter):
     title = _("Content Type")
     parameter_name = "content_type"
     template = 'djangocms_content_expiry/multiselect-filter.html'
@@ -26,26 +44,11 @@ class ContentTypeFilter(admin.SimpleListFilter):
             return queryset
         return queryset.filter(version__content_type__in=content_type.split(','))
 
-    def value_as_list(self):
-        return self.value().split(',') if self.value() else []
-
-    def _update_query(self, changelist, include=None, exclude=None):
-        selected_list = self.value_as_list()
-        if include and include not in selected_list:
-            selected_list.append(include)
-        if exclude and exclude in selected_list:
-            selected_list.remove(exclude)
-        if selected_list:
-            compiled_selection = ','.join(selected_list)
-            return changelist.get_query_string({self.parameter_name: compiled_selection})
-        else:
-            return changelist.get_query_string(remove=[self.parameter_name])
-
     def choices(self, changelist):
         yield {
             'selected': self.value() is None,
             'query_string': changelist.get_query_string(remove=[self.parameter_name]),
-            'display': _('All'),
+            'display': 'All',
             'initial': True,
         }
         for lookup, title in self.lookup_choices:
@@ -58,39 +61,47 @@ class ContentTypeFilter(admin.SimpleListFilter):
             }
 
 
-class VersionStateFilter(admin.SimpleListFilter):
-
-
-
+class VersionStateFilter(SimpleListMultiselectFilter):
     title = _("Version State")
     parameter_name = "state"
     default_filter_value = PUBLISHED
+    show_all_param_value = "_all_"
     template = 'djangocms_content_expiry/multiselect-filter.html'
-
-    class Media:
-        css = {
-            'all': ('css/admin/new_css.css',)
-        }
 
     def _is_default(self, filter_value):
         if self.default_filter_value == filter_value and self.value() is None:
             return True
         return False
 
-    def lookups(self, request, model_admin):
-        return VERSION_STATES
+    def _get_all_query_string(self, changelist):
+        """
+        If there's a default value set the all parameter needs to be provided
+        however, if a default is not set the all parameter is not required.
+        """
+        # Default setting in use
+        if self.default_filter_value:
+            return changelist.get_query_string(
+                {self.parameter_name:  self.show_all_param_value}
+            )
+        # Default setting not in use
+        return changelist.get_query_string(remove=[self.parameter_name])
 
-    def queryset(self, request, queryset):
+    def _is_all_selected(self):
         state = self.value()
-        if state:
-            return queryset.filter(version__state=state)
-        return queryset
-
-    def value_as_list(self):
-        return self.value().split(',') if self.value() else []
+        # Default setting in use
+        if self.default_filter_value and state == self.show_all_param_value:
+            return True
+        # Default setting not in use
+        elif not self.default_filter_value and not state:
+            return True
+        return False
 
     def _update_query(self, changelist, include=None, exclude=None):
         selected_list = self.value_as_list()
+
+        if self.show_all_param_value in selected_list:
+            selected_list.remove(self.show_all_param_value)
+
         if include and include not in selected_list:
             selected_list.append(include)
         if exclude and exclude in selected_list:
@@ -101,15 +112,33 @@ class VersionStateFilter(admin.SimpleListFilter):
         else:
             return changelist.get_query_string(remove=[self.parameter_name])
 
+    def lookups(self, request, model_admin):
+        return VERSION_STATES
+
+    def queryset(self, request, queryset):
+        state = self.value()
+        # Default setting in use
+        if self.default_filter_value:
+            if not state:
+                return queryset.filter(version__state=self.default_filter_value)
+            elif state != "_all_":
+                return queryset.filter(version__state__in=state.split(','))
+        # Default setting not in use
+        elif not self.default_filter_value and state:
+            return queryset.filter(version__state__in=state.split(','))
+        return queryset
+
     def choices(self, changelist):
         yield {
-            "query_string": changelist.get_query_string(remove=[self.parameter_name]),
+            "selected": self._is_all_selected(),
+            "query_string": self._get_all_query_string(changelist),
             "display": _("All"),
+            'initial': True,
         }
         for lookup, title in self.lookup_choices:
             lookup_value = str(lookup)
             yield {
-                "selected": self.value() == lookup_value or self._is_default(lookup_value),
+                "selected":  str(lookup) in self.value_as_list() or self._is_default(lookup_value),
                 "query_string": changelist.get_query_string(
                     {self.parameter_name: lookup}
                 ),
