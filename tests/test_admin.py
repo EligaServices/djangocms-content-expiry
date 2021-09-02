@@ -9,8 +9,8 @@ from djangocms_content_expiry.test_utils.factories import (
     UserFactory,
 )
 from djangocms_content_expiry.test_utils.polls.factories import (
-    PollContentWithVersionFactory,
     PollContentExpiryFactory,
+    PollContentWithVersionFactory,
 )
 
 

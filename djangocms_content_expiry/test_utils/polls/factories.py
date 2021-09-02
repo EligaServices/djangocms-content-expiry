@@ -4,7 +4,8 @@ from factory.fuzzy import FuzzyChoice, FuzzyText
 
 from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.test_utils.factories import (
-    AbstractVersionFactory, UserFactory
+    AbstractVersionFactory,
+    UserFactory,
 )
 
 from .models import Poll, PollContent
