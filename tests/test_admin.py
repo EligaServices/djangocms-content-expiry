@@ -57,7 +57,7 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         # Record that is expired by 1 day
         delta_1 = datetime.timedelta(days=1)
         expire_at_1 = from_date + delta_1
-        version_1 = PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
+        PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
 
         # Record that is set to expire today
         expire_at_2 = from_date
@@ -80,12 +80,12 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         delta_5 = datetime.timedelta(days=30)
         expire_at_5 = from_date - delta_5
         poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
-        version_5 = poll_content_5.version
+        poll_content_5.version
 
         # Record that is set to expire in 31 days
         delta_6 = datetime.timedelta(days=31)
         expire_at_6 = from_date + delta_6
-        version_6 = PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
+        PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
 
         with self.login_user_context(self.get_superuser()):
             admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
@@ -133,8 +133,7 @@ class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
         # Record that is set to expire in 30 days
         delta_5 = datetime.timedelta(days=30)
         expire_at_5 = from_date - delta_5
-        poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
-        version_5 = poll_content_5.version
+        PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
 
         # Record that is set to expire in 31 days
         delta_6 = datetime.timedelta(days=31)

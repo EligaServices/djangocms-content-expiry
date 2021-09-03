@@ -3,10 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 import datetime
-
 from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
-
 from rangefilter.filters import DateRangeFilter
 
 from . import helpers
