@@ -3,9 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 import datetime
-from rangefilter.filters import DateRangeFilter
 
-from .filters import AuthorFilter, ContentTypeFilter, VersionStateFilter
+from .filters import AuthorFilter, ContentTypeFilter, CustomDateRangeFilter, VersionStateFilter
 from .models import ContentExpiry
 
 
@@ -14,12 +13,20 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     list_display = ['title', 'content_type', 'expires', 'version_state', 'version_author']
     # Disable automatically linking to the Expiry record
     list_display_links = None
-    list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter, AuthorFilter)
+    list_filter = (ContentTypeFilter, ('expires', CustomDateRangeFilter), VersionStateFilter, AuthorFilter)
 
     class Media:
         css = {
             'all': ('css/date_filter.css',)
         }
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        if not 'expires__range' in request.path:
+            default_gte, default_lte = self.get_rangefilter_expires_default(request)
+            queryset = queryset.filter(expires__range=(default_gte, default_lte))
+        return queryset
 
     def get_rangefilter_expires_default(self, request):
         start_date = datetime.datetime.now() - datetime.timedelta(30)
