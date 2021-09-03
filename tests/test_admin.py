@@ -49,9 +49,57 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
 
 class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
 
-    @skip("FIXME: TBD")
     def test_expired_filter_default_setting(self):
-        self.assertSetEqual("TODO: The is_default settings should be tested and enforced", "")
+        """
+        Default filter is to display all published content on page load
+        """
+        from_date = datetime.datetime.now()
+
+        # Record that is expired by 1 day
+        delta_1 = datetime.timedelta(days=1)
+        expire_at_1 = from_date - delta_1
+        version_1 = PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
+
+        # Record that is set to expire today
+        expire_at_2 = from_date
+        poll_content_2 = PollContentExpiryFactory(expires=expire_at_2, version__state=PUBLISHED)
+        version_2 = poll_content_2.version
+
+        # Record that is set to expire tomorrow
+        delta_3 = datetime.timedelta(days=1)
+        expire_at_3 = from_date + delta_3
+        poll_content_3 = PollContentExpiryFactory(expires=expire_at_3, version__state=PUBLISHED)
+        version_3 = poll_content_3.version
+
+        # Record that is set to expire in 29 days
+        delta_4 = datetime.timedelta(days=29)
+        expire_at_4 = from_date + delta_4
+        poll_content_4 = PollContentExpiryFactory(expires=expire_at_4, version__state=PUBLISHED)
+        version_4 = poll_content_4.version
+
+        # Record that is set to expire in 30 days
+        delta_5 = datetime.timedelta(days=30)
+        expire_at_5 = from_date + delta_5
+        poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
+        version_5 = poll_content_5.version
+
+        # Record that is set to expire in 31 days
+        delta_6 = datetime.timedelta(days=31)
+        expire_at_6 = from_date + delta_6
+        version_6 = PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
+
+        with self.login_user_context(self.get_superuser()):
+            admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+            response = self.client.get(admin_endpoint)
+
+        # All 6 content objects should be returned as no date filter is set
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [version_1.pk, version_2.pk, version_3.pk,
+             version_4.pk, version_5.pk, version_6.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
 
     def test_expired_filter_setting_expired_at_range_boundaries(self):
         """
