@@ -28,7 +28,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
-        if not 'expires__range' in request.path:
+        if 'expires__range' not in request.path:
             default_gte, default_lte = self.get_rangefilter_expires_default(request)
             queryset = queryset.filter(expires__range=(default_gte, default_lte))
         return queryset
