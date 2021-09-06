@@ -4,6 +4,8 @@ from djangocms_versioning import admin
 
 from djangocms_content_expiry.models import ContentExpiry
 
+from djangocms_content_expiry.helpers import create_version_expiry
+
 
 def expires(self, obj):
     version = ContentExpiry.objects.filter(version=obj.pk)
@@ -30,3 +32,17 @@ def get_list_display(func):
 
 
 admin.VersionAdmin.get_list_display = get_list_display(admin.VersionAdmin.get_list_display)
+
+
+def new_save(old_save):
+    """
+    Override the Versioning save method to add the expiration date
+    """
+    def inner(version, **kwargs):
+        old_save(version, **kwargs)
+        create_version_expiry(version)
+        return version
+    return inner
+
+
+models.Version.save = new_save(models.Version.save)
