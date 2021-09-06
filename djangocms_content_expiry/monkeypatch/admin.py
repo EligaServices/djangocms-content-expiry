@@ -1,7 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from djangocms_versioning import admin
-from djangocms_versioning import models
+from djangocms_versioning import admin, models
 
 from djangocms_content_expiry.helpers import create_version_expiry
 from djangocms_content_expiry.models import ContentExpiry
@@ -34,15 +33,15 @@ def get_list_display(func):
 admin.VersionAdmin.get_list_display = get_list_display(admin.VersionAdmin.get_list_display)
 
 
-def new_save(old_save):
-    """
-    Override the Versioning save method to add the expiration date
-    """
-    def inner(version, **kwargs):
-        old_save(version, **kwargs)
-        create_version_expiry(version)
-        return version
-    return inner
-
-
-models.Version.save = new_save(models.Version.save)
+# def new_save(old_save):
+#     """
+#     Override the Versioning save method to add the expiration date
+#     """
+#     def inner(version, **kwargs):
+#         old_save(version, **kwargs)
+#         create_version_expiry(version)
+#         return version
+#     return inner
+#
+#
+# models.Version.save = new_save(models.Version.save)
