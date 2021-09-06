@@ -1,10 +1,10 @@
 from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning import admin
-
-from djangocms_content_expiry.models import ContentExpiry
+from djangocms_versioning import models
 
 from djangocms_content_expiry.helpers import create_version_expiry
+from djangocms_content_expiry.models import ContentExpiry
 
 
 def expires(self, obj):
