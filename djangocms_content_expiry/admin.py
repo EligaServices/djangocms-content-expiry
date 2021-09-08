@@ -16,7 +16,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     class Media:
         css = {
-            'all': ('css/date_filter.css',)
+            'all': ('djangocms_content_expiry/css/date_filter.css',)
         }
 
     def get_queryset(self, request):
