@@ -10,7 +10,7 @@ class ContentExpiry(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        verbose_name=_('expired by')
+        verbose_name=_('expired by'),
     )
     version = models.OneToOneField(
         Version,

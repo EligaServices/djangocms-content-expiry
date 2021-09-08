@@ -12,8 +12,6 @@ from .models import ContentExpiry
 @admin.register(ContentExpiry)
 class ContentExpiryAdmin(admin.ModelAdmin):
     list_display = ['title', 'content_type', 'expires', 'version_state', 'version_author']
-    # Disable automatically linking to the Expiry record
-    list_display_links = None
     list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter, AuthorFilter)
 
     class Media:
