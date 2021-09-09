@@ -6,6 +6,7 @@ from djangocms_versioning.models import Version
 
 
 class ContentExpiry(models.Model):
+
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

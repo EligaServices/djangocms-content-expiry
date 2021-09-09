@@ -1,11 +1,13 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
+from django.urls import reverse
 
 import datetime
 from rangefilter.filters import DateRangeFilter
 
 from .filters import AuthorFilter, ContentTypeFilter, VersionStateFilter
+from .forms import ContentExpiryForm
 from .models import ContentExpiry
 
 
@@ -13,6 +15,15 @@ from .models import ContentExpiry
 class ContentExpiryAdmin(admin.ModelAdmin):
     list_display = ['title', 'content_type', 'expires', 'version_state', 'version_author']
     list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter, AuthorFilter)
+    form = ContentExpiryForm
+
+    def has_add_permission(self, request):
+        # If the request is to add an expiry record, we will check the setting
+        add_endpoint = reverse('admin:djangocms_content_expiry_contentexpiry_add')
+        if add_endpoint in request.path:
+            return super().has_add_permission(request)
+        # Otherwise the admin will try and add the add buttons thta we don't want, so hide them always
+        return False
 
     class Media:
         css = {
