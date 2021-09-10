@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
-from django.urls import reverse
 
 import datetime
 from rangefilter.filters import DateRangeFilter
@@ -17,18 +16,19 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     list_filter = (ContentTypeFilter, ('expires', DateRangeFilter), VersionStateFilter, AuthorFilter)
     form = ContentExpiryForm
 
-    def has_add_permission(self, request):
-        # If the request is to add an expiry record, we will check the setting
-        add_endpoint = reverse('admin:djangocms_content_expiry_contentexpiry_add')
-        if add_endpoint in request.path:
-            return super().has_add_permission(request)
-        # Otherwise the admin will try and add the add buttons thta we don't want, so hide them always
-        return False
-
     class Media:
         css = {
             'all': ('djangocms_content_expiry/css/date_filter.css',)
         }
+
+    def has_add_permission(self, request):
+        # Entries are added automatically
+        return False
+
+    def has_delete_permission(self, request):
+        # Deletion should never be possible, the only way that a
+        # content expiry record could be deleted is via versioning.
+        return False
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
