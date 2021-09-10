@@ -18,12 +18,12 @@ def _get_moderation_content_expiry_link(obj, request):
     # If a content expiry record exists we can go to it
     if hasattr(version, "contentexpiry"):
         view_endpoint = format_html(
-            "{}?collection__id__exact={}",
-            reverse("admin:djangocms_content_expiry_contentexpiry_change", args=[version.contentexpiry.id]),
+            "{}?collection__id__exact={}&_popup=1",
+            reverse("admin:djangocms_content_expiry_contentexpiry_change", args=[version.contentexpiry.pk]),
             obj.pk,
         )
         return render_to_string(
-            "djangocms_content_expiry/calendar_icon.html", {"url": view_endpoint}
+            "djangocms_content_expiry/calendar_icon.html", {"url": view_endpoint, "field_id": f"contentexpiry_{obj.pk}"}
         )
     # Otherwise we need to be able to create a new content expiry record
     add_endpoint = reverse('admin:djangocms_content_expiry_contentexpiry_add')

@@ -33,6 +33,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
+        # FIXME: This affects a chaneg request for a content expiry record!
         if 'expires__range' not in request.path:
             default_gte, default_lte = self.get_rangefilter_expires_default(request)
             queryset = queryset.filter(expires__range=(default_gte, default_lte))
