@@ -5,7 +5,9 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
 
-from . import helpers
+from rangefilter.filters import DateRangeFilter
+
+from .helpers import get_authors, get_rangefilter_expires_default
 
 
 class SimpleListMultiselectFilter(admin.SimpleListFilter):
@@ -158,7 +160,7 @@ class AuthorFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         from django.utils.encoding import force_text
         options = []
-        for user in helpers.get_authors():
+        for user in get_authors():
             options.append(
                 (force_text(user.pk), user.get_full_name() or user.get_username())
             )
@@ -167,4 +169,17 @@ class AuthorFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(created_by=self.value()).distinct()
+        return queryset
+
+
+class ContentExpiryDateRangeFilter(DateRangeFilter):
+    def queryset(self, request, queryset):
+        queryset = super().queryset(request, queryset)
+
+        # By default the widget should default to show a default duration and not all content
+        # expiry records
+        if 'expires__range' not in request.path:
+            default_gte, default_lte = get_rangefilter_expires_default()
+            queryset = queryset.filter(expires__range=(default_gte, default_lte))
+
         return queryset
