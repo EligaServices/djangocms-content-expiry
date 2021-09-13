@@ -12,6 +12,10 @@ def get_authors():
 
 
 def get_rangefilter_expires_default():
+    """
+    Sets a default date range to help filter
+    Content Expiry records
+    """
     start_date = datetime.now() - timedelta(30)
     end_date = datetime.now()
     return start_date, end_date
