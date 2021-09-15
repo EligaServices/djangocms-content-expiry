@@ -8,11 +8,14 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 
-def _get_moderation_content_expiry_link(obj):
+def get_moderation_content_expiry_link(obj):
     """
-    Return a user friendly button for viewing content expiry in djangocms-moderation
-    :param obj: TODO
-    :return: TODO
+    Return a user friendly button for viewing content expiry in the
+    actions section of the Moderation Request Admin Changelist
+    in djangocms-moderation.
+
+    :param obj: A Moderation Request object supplied from the admin view table row
+    :return: A link to the expiry record if one exists
     """
     version = obj.moderation_request.version
 
@@ -30,8 +33,11 @@ def _get_moderation_content_expiry_link(obj):
 
 def get_expiry_date(obj):
     """
-    A custom field to show the expiry date in the moderation collection
-    change list
+    A custom field to show the expiry date in the
+    Moderation Request Admin Changelist in djangocms-moderation.
+
+    :param obj: A Moderation Request object supplied from the admin view table row
+    :return: The expiry date from the matching moderation request object
     """
     version = obj.moderation_request.version
 
@@ -44,8 +50,12 @@ class ContentExpiryAppConfig(CMSAppConfig):
     # Enable moderation to be able to "configure it"
     djangocms_moderation_enabled = True
     moderated_models = []
-    moderation_collection_admin_actions = [_get_moderation_content_expiry_link]
-    moderation_collection_admin_fields = [get_expiry_date]
+    moderation_request_changelist_actions = [
+        get_moderation_content_expiry_link,
+    ]
+    moderation_request_changelist_fields = [
+        get_expiry_date,
+    ]
     # Enable versioning because moderation is versioning dependant
     djangocms_versioning_enabled = True
     versioning = []
