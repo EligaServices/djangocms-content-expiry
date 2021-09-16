@@ -44,6 +44,8 @@ def get_expiry_date(obj):
 
     if hasattr(version, "contentexpiry"):
         return version.contentexpiry.expires
+
+
 get_expiry_date.short_description = _('Expires')
 
 

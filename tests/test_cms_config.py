@@ -27,7 +27,7 @@ class ModerationConfigDependancyTestCase(CMSTestCase):
             and callable(moderation_extension.handle_moderation_request_changelist_fields)
         )
 
-    def test_moderation_config_admin_controls_exist(self):
+    def test_moderation_config_admin_controls_are_compiled_by_moderation(self):
         moderation = apps.get_app_config("djangocms_moderation")
         content_expiry_actions = ContentExpiryAppConfig.moderation_request_changelist_actions
         content_expiry_fields = ContentExpiryAppConfig.moderation_request_changelist_fields
