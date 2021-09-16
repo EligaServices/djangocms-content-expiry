@@ -1,11 +1,10 @@
 from django.conf import settings
-
-from cms.app_base import CMSAppConfig
-
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+
+from cms.app_base import CMSAppConfig
 
 
 def get_moderation_content_expiry_link(obj):

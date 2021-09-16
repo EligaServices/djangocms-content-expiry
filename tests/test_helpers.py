@@ -1,12 +1,15 @@
 from datetime import datetime
+from freezegun import freeze_time
 from unittest.mock import patch
 
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_content_expiry.helpers import get_authors, get_rangefilter_expires_default
+from djangocms_content_expiry.helpers import (
+    get_authors,
+    get_rangefilter_expires_default,
+)
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
-from freezegun import freeze_time
 
 
 class ContentExpiryAuthorHelperTestCase(CMSTestCase):

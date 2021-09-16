@@ -1,10 +1,10 @@
 from django.apps import apps
 
-from djangocms_content_expiry.cms_config import ContentExpiryAppConfig
+from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_moderation.cms_config import ModerationExtension
 
-from cms.test_utils.testcases import CMSTestCase
+from djangocms_content_expiry.cms_config import ContentExpiryAppConfig
 
 
 class ModerationConfigDependancyTestCase(CMSTestCase):
