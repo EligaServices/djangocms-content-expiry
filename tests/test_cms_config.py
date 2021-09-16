@@ -1,12 +1,9 @@
-from unittest.mock import Mock, patch
-
 from django.apps import apps
 
 from djangocms_content_expiry.cms_config import ContentExpiryAppConfig
 
 from djangocms_moderation.cms_config import ModerationExtension
 
-from cms.models.fields import PlaceholderRelationField
 from cms.test_utils.testcases import CMSTestCase
 
 
@@ -19,10 +16,8 @@ class ModerationConfigDependancyTestCase(CMSTestCase):
         """
         moderation_extension = ModerationExtension()
 
-        #
         self.assertTrue(hasattr(moderation_extension, "moderation_request_changelist_actions"))
         self.assertTrue(hasattr(moderation_extension, "moderation_request_changelist_fields"))
-        #
         self.assertTrue(
             hasattr(moderation_extension, "handle_moderation_request_changelist_actions")
             and callable(moderation_extension.handle_moderation_request_changelist_actions)

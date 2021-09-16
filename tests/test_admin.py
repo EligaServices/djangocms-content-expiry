@@ -1,6 +1,7 @@
+import datetime
+
 from cms.test_utils.testcases import CMSTestCase
 
-import datetime
 from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
 
 from djangocms_content_expiry.models import ContentExpiry
