@@ -23,3 +23,7 @@ django-admin-rangefilter
 https://github.com/divio/django-cms/tarball/66c70394c9e144281a0b47d93e3784d06318acf9#egg=django-cms
 https://github.com/divio/djangocms-text-ckeditor/archive/support/4.0.x.zip
 https://github.com/divio/djangocms-versioning/tarball/492d01c974e40b007b71e2a7e961a9019a0d5ac4#egg=djangocms-versioning
+
+# FIXME: Requires moderation changes to be merged!!
+# https://github.com/django-cms/djangocms-moderation/tarball/********#egg=djangocms-moderation
+https://github.com/Aiky30/djangocms-moderation/tarball/content-expiry-integration#egg=djangocms-moderation

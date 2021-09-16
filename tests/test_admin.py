@@ -19,17 +19,19 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         """
         Ensure that the form fields present match the model fields"
         """
+        content_expiry = PollContentExpiryFactory()
+
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.get_admin_url(ContentExpiry, "add"))
+            response = self.client.get(self.get_admin_url(ContentExpiry, "change", content_expiry.pk))
 
         self.assertEqual(response.status_code, 200)
 
         decoded_response = response.content.decode("utf-8")
 
-        self.assertIn('<select name="created_by" required id="id_created_by">', decoded_response)
-        self.assertIn('<select name="version" required id="id_version">', decoded_response)
-        self.assertIn('<input type="text" name="expires_0" class="vDateField" size="10" required id="id_expires_0">',
-                      decoded_response)
+        self.assertIn('name="created_by"', decoded_response)
+        self.assertIn('name="version"', decoded_response)
+        self.assertIn('name="expires_0"', decoded_response)
+        self.assertIn('name="expires_1"', decoded_response)
 
     def test_change_fields(self):
         """
@@ -39,11 +41,11 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
             response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
 
         context = response.context_data['cl'].list_display
-        self.assertEqual('title', context[1])
-        self.assertEqual('content_type', context[2])
-        self.assertEqual('expires', context[3])
-        self.assertEqual('version_state', context[4])
-        self.assertEqual('version_author', context[5])
+        self.assertTrue('title' in context)
+        self.assertTrue('content_type' in context)
+        self.assertTrue('expires' in context)
+        self.assertTrue('version_state' in context)
+        self.assertTrue('version_author' in context)
 
 
 class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
