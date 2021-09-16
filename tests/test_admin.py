@@ -14,15 +14,66 @@ from djangocms_content_expiry.test_utils.polls.factories import (
 )
 
 
-class ContentExpiryChangelistTestCase(CMSTestCase):
-    def test_changelist_form_fields(self):
+class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.content_expiry = PollContentExpiryFactory()
+
+    def test_add_permissions(self):
         """
-        Ensure that the form fields present match the model fields"
+        Adding a content expiry record via the admin is not permitted
         """
-        content_expiry = PollContentExpiryFactory()
+        endpoint = self.get_admin_url(ContentExpiry, "add")
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.get_admin_url(ContentExpiry, "change", content_expiry.pk))
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_view_permissions(self):
+        """
+        Viewing a content expiry record via the admin is permitted
+        """
+        endpoint = self.get_admin_url(ContentExpiry, "view")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_change_permissions(self):
+        """
+        Changing a content expiry record via the admin is permitted
+        """
+        endpoint = self.get_admin_url(ContentExpiry, "change",  self.content_expiry.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_delete_permissions(self):
+        """
+        Deleting a content expiry record via the admin is not permitted
+        """
+        endpoint = self.get_admin_url(ContentExpiry, "delete",  self.content_expiry.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 403)
+
+
+class ContentExpiryChangeTestCase(CMSTestCase):
+    def test_change_form_fields(self):
+        """
+        Ensure that the form fields present match the model fields
+        """
+        content_expiry = PollContentExpiryFactory()
+        endpoint = self.get_admin_url(ContentExpiry, "view", content_expiry.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
 
         self.assertEqual(response.status_code, 200)
 
@@ -33,12 +84,17 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         self.assertIn('name="expires_0"', decoded_response)
         self.assertIn('name="expires_1"', decoded_response)
 
+
+class ContentExpiryChangelistTestCase(CMSTestCase):
+
     def test_change_fields(self):
         """
         Ensure the change list presents list display items from the admin file
         """
+        endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
+            response = self.client.get(endpoint)
 
         context = response.context_data['cl'].list_display
         self.assertTrue('title' in context)
