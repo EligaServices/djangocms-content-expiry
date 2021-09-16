@@ -1,6 +1,6 @@
-from django.contrib.auth import get_user_model
-
 from datetime import datetime, timedelta
+
+from django.contrib.auth import get_user_model
 
 from djangocms_content_expiry.conf import DEFAULT_RANGEFILTER_DELTA
 

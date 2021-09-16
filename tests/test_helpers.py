@@ -11,7 +11,6 @@ from djangocms_content_expiry.helpers import (
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
 
-
 class ContentExpiryAuthorHelperTestCase(CMSTestCase):
     def test_get_authors_query_burden(self):
         """
