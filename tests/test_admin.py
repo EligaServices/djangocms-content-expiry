@@ -30,17 +30,6 @@ class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_view_permissions(self):
-        """
-        Viewing a content expiry record via the admin is permitted
-        """
-        endpoint = self.get_admin_url(ContentExpiry, "view")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(endpoint)
-
-        self.assertEqual(response.status_code, 200)
-
     def test_change_permissions(self):
         """
         Changing a content expiry record via the admin is permitted
@@ -70,7 +59,7 @@ class ContentExpiryChangeTestCase(CMSTestCase):
         Ensure that the form fields present match the model fields
         """
         content_expiry = PollContentExpiryFactory()
-        endpoint = self.get_admin_url(ContentExpiry, "view", content_expiry.pk)
+        endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
