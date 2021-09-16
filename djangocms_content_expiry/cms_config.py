@@ -29,6 +29,7 @@ def get_moderation_content_expiry_link(obj):
         return render_to_string(
             "djangocms_content_expiry/calendar_icon.html", {"url": view_endpoint, "field_id": f"contentexpiry_{obj.pk}"}
         )
+    return ""
 
 
 def get_expiry_date(obj):
