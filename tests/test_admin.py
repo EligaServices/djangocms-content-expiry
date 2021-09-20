@@ -4,7 +4,6 @@ from unittest.mock import patch
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
-
 from freezegun import freeze_time
 
 from djangocms_content_expiry.models import ContentExpiry
