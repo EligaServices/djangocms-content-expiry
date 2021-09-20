@@ -6,12 +6,11 @@ from djangocms_versioning.models import Version
 
 
 class ContentExpiry(models.Model):
-
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        verbose_name=_('expired by'),
+        verbose_name=_('expired by')
     )
     version = models.OneToOneField(
         Version,
