@@ -1,8 +1,9 @@
 from datetime import datetime
-from freezegun import freeze_time
 from unittest.mock import patch
 
 from cms.test_utils.testcases import CMSTestCase
+
+from freezegun import freeze_time
 
 from djangocms_content_expiry.helpers import (
     get_authors,
