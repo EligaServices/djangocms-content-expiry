@@ -177,7 +177,7 @@ class ContentExpiryDateRangeFilter(DateRangeFilter):
 
         # By default the widget should default to show a default duration and not all content
         # expiry records
-        if 'expires__range' not in request.path:
+        if not any('expires__range' in seed for seed in request.GET):
             default_gte, default_lte = get_rangefilter_expires_default()
             queryset = queryset.filter(expires__range=(default_gte, default_lte))
 
