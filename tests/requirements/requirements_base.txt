@@ -25,5 +25,5 @@ https://github.com/divio/djangocms-text-ckeditor/archive/support/4.0.x.zip
 https://github.com/divio/djangocms-versioning/tarball/492d01c974e40b007b71e2a7e961a9019a0d5ac4#egg=djangocms-versioning
 
 # FIXME: Requires moderation changes to be merged!!
-# https://github.com/django-cms/djangocms-moderation/tarball/********#egg=djangocms-moderation
+# https://github.com/django-cms/djangocms-moderation/tarball/release/1.0.x#egg=djangocms-moderation
 https://github.com/Aiky30/djangocms-moderation/tarball/content-expiry-integration#egg=djangocms-moderation
