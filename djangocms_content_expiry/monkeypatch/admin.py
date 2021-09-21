@@ -17,7 +17,7 @@ admin.VersionAdmin.expire = expires
 
 def get_list_display(func):
     """
-    Register the locked field with the Versioning Admin
+    Register the expires field with the Versioning Admin
     """
     def inner(self, request):
         list_display = func(self, request)
