@@ -2,9 +2,10 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
 
 from cms.app_base import CMSAppConfig
+
+from .constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
 def get_moderation_content_expiry_link(obj):
@@ -45,7 +46,7 @@ def get_expiry_date(obj):
         return version.contentexpiry.expires
 
 
-get_expiry_date.short_description = _('expire date')
+get_expiry_date.short_description = CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
 class ContentExpiryAppConfig(CMSAppConfig):
