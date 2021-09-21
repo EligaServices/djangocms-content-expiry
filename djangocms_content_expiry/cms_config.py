@@ -45,7 +45,7 @@ def get_expiry_date(obj):
         return version.contentexpiry.expires
 
 
-get_expiry_date.short_description = _('Expires')
+get_expiry_date.short_description = _('expire date')
 
 
 class ContentExpiryAppConfig(CMSAppConfig):
