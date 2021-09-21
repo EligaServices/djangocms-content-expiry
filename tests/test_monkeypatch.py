@@ -7,8 +7,8 @@ from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_versioning.constants import PUBLISHED
 
-from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 from djangocms_content_expiry.constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
+from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
 
 class ContentExpiryMonkeyPatchTesCase(CMSTestCase):
