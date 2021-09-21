@@ -8,6 +8,7 @@ from djangocms_moderation.cms_config import ModerationExtension
 from djangocms_moderation.models import ModerationRequestTreeNode
 
 from djangocms_content_expiry.cms_config import ContentExpiryAppConfig
+from djangocms_content_expiry.constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
 class ModerationConfigDependancyTestCase(CMSTestCase):
@@ -54,4 +55,4 @@ class ModerationConfigDependancyTestCase(CMSTestCase):
         list_display = moderation_admin.get_list_display(request)
 
         self.assertIn('get_expiry_date', list_display)
-        self.assertEqual('expiry date', moderation_admin.get_expiry_date.short_description)
+        self.assertEqual(CONTENT_EXPIRY_EXPIRE_FIELD_LABEL, moderation_admin.get_expiry_date.short_description)
