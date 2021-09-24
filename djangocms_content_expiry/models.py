@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.db import models
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning.models import Version

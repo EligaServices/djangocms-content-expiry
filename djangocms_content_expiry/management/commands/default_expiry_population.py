@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.core.management.base import BaseCommand
 
 from djangocms_versioning.models import Version
