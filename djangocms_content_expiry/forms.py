@@ -24,6 +24,6 @@ class ContentExpiryForm(forms.ModelForm):
         self.fields['created_by'].widget = ForeignKeyReadOnlyWidget(user_field, site)
 
 
-class ContentExpiryContentTypeConfigurationForm(forms.ModelForm):
+class DefaultContentExpiryConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
