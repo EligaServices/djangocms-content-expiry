@@ -5,6 +5,10 @@ from .models import DefaultContentExpiryConfiguration
 
 
 def get_default_duration_for_version(version):
+    """
+    Returns a default expiration value dependant on whether an entry exists for
+    a content type in DefaultContentExpiryConfiguration.
+    """
     default_configuration = DefaultContentExpiryConfiguration.objects.filter(
         content_type=version.content_type
     )

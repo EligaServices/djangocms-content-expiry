@@ -10,11 +10,15 @@ from djangocms_content_expiry.test_utils.factories import DefaultContentExpiryCo
 from djangocms_content_expiry.utils import get_default_duration_for_version
 
 
-class ContentExpiryAuthorHelperTestCase(CMSTestCase):
+class ContentExpiryDefaultConfigurationHelperTestCase(CMSTestCase):
 
     @freeze_time("2200-01-14")
     @patch('djangocms_content_expiry.utils.DEFAULT_CONTENT_EXPIRY_DURATION', 1)
     def test_default_duration_for_content_type(self):
+        """
+        Default durations for Content Type can be set via a setting or by a content
+        author using DefaultContentExpiryConfiguration.
+        """
         poll_content_expiry = PollContentExpiryFactory()
 
         # Value before default expiry date is set, expected to use
