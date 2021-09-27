@@ -2,9 +2,9 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 
 import factory
-from factory.fuzzy import FuzzyText
+from factory.fuzzy import FuzzyInteger, FuzzyText
 
-from djangocms_content_expiry.models import ContentExpiry
+from djangocms_content_expiry.models import ContentExpiry, DefaultContentExpiryConfiguration
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -45,3 +45,11 @@ class ContentExpiryFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = ContentExpiry
+
+
+class DefaultContentExpiryConfigurationFactory(factory.django.DjangoModelFactory):
+    content_type = None
+    duration = FuzzyInteger(1, 12)
+
+    class Meta:
+        model = DefaultContentExpiryConfiguration
