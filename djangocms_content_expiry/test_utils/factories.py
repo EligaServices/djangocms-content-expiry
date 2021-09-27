@@ -4,7 +4,10 @@ from django.contrib.contenttypes.models import ContentType
 import factory
 from factory.fuzzy import FuzzyInteger, FuzzyText
 
-from djangocms_content_expiry.models import ContentExpiry, DefaultContentExpiryConfiguration
+from djangocms_content_expiry.models import (
+    ContentExpiry,
+    DefaultContentExpiryConfiguration,
+)
 
 
 class UserFactory(factory.django.DjangoModelFactory):
