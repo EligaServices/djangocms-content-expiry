@@ -14,7 +14,6 @@ INSTALL_REQUIREMENTS = [
 setup(
     name="djangocms-content-expiry",
     packages=find_packages(),
-    include_package_data=True,
     version=djangocms_content_expiry.__version__,
     description=djangocms_content_expiry.__doc__,
     long_description=open("README.rst").read(),
