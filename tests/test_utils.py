@@ -5,10 +5,10 @@ from cms.test_utils.testcases import CMSTestCase
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 from djangocms_content_expiry.test_utils.factories import (
     DefaultContentExpiryConfigurationFactory,
 )
+from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 from djangocms_content_expiry.utils import get_default_duration_for_version
 
 
