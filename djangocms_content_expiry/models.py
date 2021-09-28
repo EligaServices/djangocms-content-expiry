@@ -11,17 +11,9 @@ from .constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
 def _limit_content_type_choices():
-
     model_list = [value for value in _cms_extension().versionables_by_content]
     content_type_list = ContentType.objects.get_for_models(*model_list).items()
-    inclusion = [content_type.pk for k, content_type in content_type_list]
-
-    existing = DefaultContentExpiryConfiguration.objects.filter(
-        **{"content_type__in": inclusion}
-    ).values_list('pk', flat=True)
-    for item in existing:
-        inclusion.remove(item)
-
+    inclusion = [content_type.pk for key, content_type in content_type_list]
     return {"id__in": inclusion}
 
 

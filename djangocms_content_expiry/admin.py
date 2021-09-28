@@ -8,7 +8,7 @@ from .filters import (
     ContentTypeFilter,
     VersionStateFilter,
 )
-from .forms import ContentExpiryForm
+from .forms import ContentExpiryForm, DefaultContentExpiryConfigurationForm
 from .helpers import get_rangefilter_expires_default
 from .models import ContentExpiry, DefaultContentExpiryConfiguration
 
@@ -73,3 +73,4 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 @admin.register(DefaultContentExpiryConfiguration)
 class DefaultContentExpiryConfigurationAdmin(admin.ModelAdmin):
     list_display = ['content_type', 'duration']
+    form = DefaultContentExpiryConfigurationForm

@@ -6,21 +6,22 @@ from cms.test_utils.testcases import CMSTestCase
 from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
 from freezegun import freeze_time
 
-from djangocms_content_expiry.models import ContentExpiry
-from djangocms_content_expiry.test_utils.factories import UserFactory
+from djangocms_content_expiry.models import ContentExpiry, DefaultContentExpiryConfiguration
+from djangocms_content_expiry.test_utils.factories import UserFactory, DefaultContentExpiryConfigurationFactory
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
 
 class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
 
     def setUp(self):
+        self.model = ContentExpiry
         self.content_expiry = PollContentExpiryFactory()
 
     def test_add_permissions(self):
         """
         Adding a content expiry record via the admin is not permitted
         """
-        endpoint = self.get_admin_url(ContentExpiry, "add")
+        endpoint = self.get_admin_url(self.model, "add")
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
@@ -31,7 +32,7 @@ class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
         """
         Changing a content expiry record via the admin is permitted
         """
-        endpoint = self.get_admin_url(ContentExpiry, "change",  self.content_expiry.pk)
+        endpoint = self.get_admin_url(self.model, "change",  self.content_expiry.pk)
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
@@ -42,7 +43,7 @@ class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
         """
         Deleting a content expiry record via the admin is not permitted
         """
-        endpoint = self.get_admin_url(ContentExpiry, "delete",  self.content_expiry.pk)
+        endpoint = self.get_admin_url(self.model, "delete",  self.content_expiry.pk)
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
@@ -482,3 +483,94 @@ class ContentExpiryChangelistVersionFilterTestCase(CMSTestCase):
             transform=lambda x: x.pk,
             ordered=False,
         )
+
+"""
+TODO: Test
+
+Add form 
+    DefaultContentExpiryConfiguration form _limit_content_type_choices shown i.e. taking one 
+    doesn't allow the user to select one again
+
+Change form 
+    Doesn't allow you to select on change
+"""
+
+
+class DefaultContentExpiryConfigurationAdminViewsPermissionsTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.model = DefaultContentExpiryConfiguration
+        self.content_expiry_configuration = DefaultContentExpiryConfigurationFactory()
+
+    def test_add_permissions(self):
+        """
+        Adding a default content expiry configuration record via the admin is permitted
+        """
+        endpoint = self.get_admin_url(self.model, "add")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_change_permissions(self):
+        """
+        Changing a default content expiry configuration record via the admin is permitted
+        """
+        endpoint = self.get_admin_url(self.model, "change",  self.content_expiry_configuration.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_delete_permissions(self):
+        """
+        Deleting a default content expiry configuration record via the admin is permitted
+        """
+        endpoint = self.get_admin_url(self.model, "delete",  self.content_expiry_configuration.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+
+
+class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.model = DefaultContentExpiryConfiguration
+
+    def test_add_form(self):
+        """
+        """
+        endpoint = self.get_admin_url(self.model, "add")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 200)
+
+        # All versionable content types are present
+
+        # Adding another content type is not shown
+
+        # Adding an entry removes that from the list
+
+    def test_change_form(self):
+        """
+        """
+        content_expiry = PollContentExpiryFactory()
+        content_expiry_configuration = DefaultContentExpiryConfigurationFactory(
+            content_type=content_expiry.version.content_type
+        )
+        endpoint = self.get_admin_url(self.model, "change",  content_expiry_configuration.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+
+        # Only the current content type is shown and the select is discabled
+
+
