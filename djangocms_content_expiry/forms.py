@@ -1,9 +1,6 @@
 from django import forms
 from django.contrib.admin import widgets
 from django.contrib.admin.sites import site
-from django.contrib.contenttypes.models import ContentType
-
-from djangocms_versioning.versionables import _cms_extension
 
 from .models import ContentExpiry, DefaultContentExpiryConfiguration
 

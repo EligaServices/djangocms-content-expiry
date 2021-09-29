@@ -3,17 +3,21 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.contrib import admin
-from django.contrib.contenttypes.models import ContentType
 
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_versioning.cms_config import VersioningCMSExtension
 from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
 from freezegun import freeze_time
 
 from djangocms_content_expiry.forms import ForeignKeyReadOnlyWidget
-from djangocms_content_expiry.models import ContentExpiry, DefaultContentExpiryConfiguration
-from djangocms_content_expiry.test_utils.factories import UserFactory, DefaultContentExpiryConfigurationFactory
+from djangocms_content_expiry.models import (
+    ContentExpiry,
+    DefaultContentExpiryConfiguration,
+)
+from djangocms_content_expiry.test_utils.factories import (
+    UserFactory,
+    DefaultContentExpiryConfigurationFactory,
+)
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
 
@@ -489,17 +493,6 @@ class ContentExpiryChangelistVersionFilterTestCase(CMSTestCase):
             transform=lambda x: x.pk,
             ordered=False,
         )
-
-"""
-TODO: Test
-
-Add form 
-    DefaultContentExpiryConfiguration form _limit_content_type_choices shown i.e. taking one 
-    doesn't allow the user to select one again
-
-Change form 
-    Doesn't allow you to select on change
-"""
 
 
 class DefaultContentExpiryConfigurationAdminViewsPermissionsTestCase(CMSTestCase):
