@@ -1,11 +1,17 @@
 import datetime
 from unittest.mock import patch
 
+from django.apps import apps
+from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
+
 from cms.test_utils.testcases import CMSTestCase
 
+from djangocms_versioning.cms_config import VersioningCMSExtension
 from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
 from freezegun import freeze_time
 
+from djangocms_content_expiry.forms import ForeignKeyReadOnlyWidget
 from djangocms_content_expiry.models import ContentExpiry, DefaultContentExpiryConfiguration
 from djangocms_content_expiry.test_utils.factories import UserFactory, DefaultContentExpiryConfigurationFactory
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
@@ -541,36 +547,60 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
     def setUp(self):
         self.model = DefaultContentExpiryConfiguration
 
-    def test_add_form(self):
+    def test_add_form_content_type_items_none_set(self):
         """
+        The Content Type list should only show content types that have not yet been created
+        and are registered as versioning compatible.
         """
-        endpoint = self.get_admin_url(self.model, "add")
+        form = admin.site._registry[DefaultContentExpiryConfiguration].form(initial=None)
+        field_content_type = form.fields['content_type']
+        versioning_config = apps.get_app_config("djangocms_versioning")
 
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(endpoint)
+        # The list is equal to the content type versionables
+        content_type_list = [item for versionable in versioning_config.cms_extension.versionables
+                             for item in versionable.content_types]
 
-        self.assertEqual(response.status_code, 200)
-
-        # All versionable content types are present
-
-        # Adding another content type is not shown
-
-        # Adding an entry removes that from the list
-
-    def test_change_form(self):
-        """
-        """
-        content_expiry = PollContentExpiryFactory()
-        content_expiry_configuration = DefaultContentExpiryConfigurationFactory(
-            content_type=content_expiry.version.content_type
+        self.assertCountEqual(
+            field_content_type.choices.queryset.values_list('id', flat=True),
+            content_type_list,
         )
-        endpoint = self.get_admin_url(self.model, "change",  content_expiry_configuration.pk)
 
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(endpoint, follow=True)
+        # Once an entry exists it should no longer be possible to create an entry for it
+        poll_content_expiry = PollContentExpiryFactory()
+        DefaultContentExpiryConfigurationFactory(
+            content_type=poll_content_expiry.version.content_type
+        )
 
-        self.assertEqual(response.status_code, 200)
+        form = admin.site._registry[DefaultContentExpiryConfiguration].form(initial=None)
+        field_content_type = form.fields['content_type']
+        versioning_config = apps.get_app_config("djangocms_versioning")
 
-        # Only the current content type is shown and the select is discabled
+        # The list is equal to the content type versionables
+        content_type_list = [item for versionable in versioning_config.cms_extension.versionables
+                             for item in versionable.content_types]
 
+        # We have to delete the reserved entry because it now exists!
+        content_type_list.remove(poll_content_expiry.version.content_type.id)
 
+        self.assertCountEqual(
+            field_content_type.choices.queryset.values_list('id', flat=True),
+            content_type_list,
+        )
+
+    def test_change_form_content_type_items(self):
+        """
+        The Content Type control should be read only and not allow the user to change it
+        """
+        poll_content_expiry = PollContentExpiryFactory()
+        default_expiry_configuration = DefaultContentExpiryConfigurationFactory(
+            content_type=poll_content_expiry.version.content_type
+        )
+        preload_form_data = {
+            "id": default_expiry_configuration.pk,
+            "content_type": default_expiry_configuration.content_type.pk,
+            "duration": default_expiry_configuration.duration,
+        }
+        form = admin.site._registry[DefaultContentExpiryConfiguration].form(preload_form_data)
+        field_content_type = form.fields['content_type']
+
+        self.assertEqual(field_content_type.widget.__class__, ForeignKeyReadOnlyWidget)

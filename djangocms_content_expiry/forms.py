@@ -44,3 +44,6 @@ class DefaultContentExpiryConfigurationForm(forms.ModelForm):
             content_type_field = DefaultContentExpiryConfiguration._meta.get_field(field_key_ctype).remote_field
             self.fields[field_key_ctype].widget = ForeignKeyReadOnlyWidget(content_type_field, site)
 
+    class Meta:
+        model = DefaultContentExpiryConfiguration
+        exclude = []
