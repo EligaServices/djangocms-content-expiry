@@ -15,8 +15,8 @@ from djangocms_content_expiry.models import (
     DefaultContentExpiryConfiguration,
 )
 from djangocms_content_expiry.test_utils.factories import (
-    UserFactory,
     DefaultContentExpiryConfigurationFactory,
+    UserFactory,
 )
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 
