@@ -15,6 +15,8 @@ class Command(BaseCommand):
         """
         for version in Version.objects.filter(contentexpiry__isnull=True):
 
+            self.stdout.write(f"Processing version: {version}")
+
             # Catch any versions that have no content object attached
             if not version.content:
                 self.stdout.write(self.style.WARNING(f"No content found for version: {version}"))
