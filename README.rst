@@ -49,7 +49,7 @@ The default Content Expiry creation expiry date defaults to 12 months. This is t
 Commands
 =============
 
-default_expiry_population
+create_existing_versions_expiry_records
 -------------------------
 When installing the package into an existing project that already has versions, you may want to populate the existing versions with a content expiry record.
 
@@ -57,7 +57,7 @@ If content types have a different default value than set in the setting: :ref:`C
 
 Run::
 
-    python manage.py default_expiry_population
+    python manage.py create_existing_versions_expiry_records
 
 Testing
 =======
