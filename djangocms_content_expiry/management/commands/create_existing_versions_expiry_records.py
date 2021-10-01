@@ -15,25 +15,20 @@ class Command(BaseCommand):
         """
         for version in Version.objects.filter(contentexpiry__isnull=True):
 
-            self.stdout.write(f"Processing version: {version}")
-
-            # Catch any versions that have no content object attached
-            if not version.content:
-                self.stdout.write(self.style.WARNING(f"No content found for version: {version}"))
-                continue
+            self.stdout.write(f"Processing version: {version.pk}")
 
             # Use the modified date because this is the date that a published
             # version was published which is what really matters for Expired content!
             expiry_date = get_future_expire_date(version, version.modified)
 
-            ContentExpiry.objects.create(
+            expiry = ContentExpiry.objects.create(
                 created_by=version.created_by,
                 version=version,
                 expires=expiry_date,
             )
 
             self.stdout.write(
-                f"Content Expiry created for version: {version}")
+                f"Content Expiry: {expiry.pk} created for version: {version.pk}")
 
     def handle(self, *args, **options):
         self.stdout.write(f"Starting {__name__}")
