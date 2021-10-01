@@ -17,6 +17,11 @@ class Command(BaseCommand):
 
             self.stdout.write(f"Processing version: {version.pk}")
 
+            # Catch any versions that have no content object attached
+            if not version.content:
+                self.stdout.write(self.style.WARNING(f"No content found for version: {version.pk}"))
+                continue
+
             # Use the modified date because this is the date that a published
             # version was published which is what really matters for Expired content!
             expiry_date = get_future_expire_date(version, version.modified)
