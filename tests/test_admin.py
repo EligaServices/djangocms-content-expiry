@@ -308,12 +308,13 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         expiry_date = datetime.datetime.now() - datetime.timedelta(days=5)
 
         project_expiry_set = ProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
-        project_expiry_c_type = project_expiry_set[0].version.content_type
+        project_expiry_c_type = project_expiry_set[0].version.content.polymorphic_ctype_id
         art_expiry_set = ArtProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
-        art_expiry_c_type = art_expiry_set[0].version.content_type
-        research_expiry = ResearchProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
+        art_expiry_c_type = art_expiry_set[0].version.content.polymorphic_ctype_id
+        research_expiry_set = ResearchProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
+        research_expiry_c_type = research_expiry_set[0].version.content.polymorphic_ctype_id
 
-        content_type = f"?content_type={project_expiry_c_type.pk}&state={DRAFT}"
+        content_type = f"?content_type={project_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -326,7 +327,7 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
             ordered=False,
         )
 
-        content_type = f"?content_type={art_expiry_c_type.pk}&state={DRAFT}"
+        content_type = f"?content_type={art_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -335,6 +336,38 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
             [art_expiry_set[0].version.pk, art_expiry_set[1].version.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+        content_type = f"?content_type={research_expiry_c_type}&state={DRAFT}"
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint + content_type)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [research_expiry_set[0].version.pk, research_expiry_set[1].version.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+        # Multiples
+        content_type = f"?content_type={research_expiry_c_type},{art_expiry_c_type}&state={DRAFT}"
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint + content_type)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [
+                research_expiry_set[0].version.pk,
+                research_expiry_set[1].version.pk,
+                art_expiry_set[0].version.pk,
+                art_expiry_set[1].version.pk,
+             ],
             transform=lambda x: x.pk,
             ordered=False,
         )
@@ -806,9 +839,11 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
         field_content_type = form.fields['content_type']
         versioning_config = apps.get_app_config("djangocms_versioning")
 
-        # The list is equal to the content type versionables
-        content_type_list = [item for versionable in versioning_config.cms_extension.versionables
-                             for item in versionable.content_types]
+        # The list is equal to the content type versionables, get a unique list
+        content_type_list = list(set(
+            item for versionable in versioning_config.cms_extension.versionables
+            for item in versionable.content_types
+        ))
 
         self.assertCountEqual(
             field_content_type.choices.queryset.values_list('id', flat=True),
@@ -825,9 +860,11 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
         field_content_type = form.fields['content_type']
         versioning_config = apps.get_app_config("djangocms_versioning")
 
-        # The list is equal to the content type versionables
-        content_type_list = [item for versionable in versioning_config.cms_extension.versionables
-                             for item in versionable.content_types]
+        # The list is equal to the content type versionables, get a unique list
+        content_type_list = list(set(
+            item for versionable in versioning_config.cms_extension.versionables
+            for item in versionable.content_types
+        ))
 
         # We have to delete the reserved entry because it now exists!
         content_type_list.remove(poll_content_expiry.version.content_type.id)

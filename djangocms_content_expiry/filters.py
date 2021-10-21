@@ -41,15 +41,32 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
         return list
 
     def queryset(self, request, queryset):
-        content_type = self.value()
+        content_types = self.value()
 
         #if hasattr(version.content, "polymorphic_ctype"):
         #    return version.content.polymorphic_ctype
 
-
-        if not content_type:
+        if not content_types:
             return queryset
-        return queryset.filter(version__content_type__in=content_type.split(','))
+
+        # Ensure that we are matching types
+        content_types = [int(ctype) for ctype in content_types.split(',')]
+        excludes = []
+
+        # Build an exclusion list, this is caused by django-polymorphic models
+        # where the Version content_type maps to the higher order model
+        for expiry_record in queryset:
+            content = expiry_record.version.content
+
+            if hasattr(content, "polymorphic_ctype"):
+                if content.polymorphic_ctype_id not in content_types:
+                    excludes.append(expiry_record.pk)
+            else:
+                model_content_type = ContentType.objects.get_for_model(content)
+                if model_content_type.pk not in content_types:
+                    excludes.append(expiry_record.pk)
+
+        return queryset.exclude(pk__in=excludes)
 
     def choices(self, changelist):
         yield {
