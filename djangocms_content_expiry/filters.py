@@ -42,10 +42,11 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
 
     def _process_item_for_possible_exclusion(self, expiry_record, content_types, excludes):
         """
-        Handles polymorphic models that have two content types, where versioning
+        Find polymorphic concrete models, this is required because versioning
         is attached to the abstract model rather than the concrete model.
 
-        Returns a list of expiry pk's to exclude from a queryset.
+        Find any simple models for exclusion which could normally be filtered out,
+        sadly this is not possible when polymorphic models are used.
         """
         content = expiry_record.version.content
 
@@ -58,7 +59,6 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             model_content_type = ContentType.objects.get_for_model(content)
             if model_content_type.pk not in content_types:
                 excludes.append(expiry_record.pk)
-        return
 
     def queryset(self, request, queryset):
         content_types = self.value()

@@ -27,6 +27,10 @@ class AbstractProjectContentVersionFactory(AbstractVersionFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        """
+        We have to ensure that the Version object takes the root Polymorphic model
+        and not the concrete model or else the mapping breaks.
+        """
         obj = model_class(*args, **kwargs)
         # Make sure Version.content_type uses ProjectContent
         obj.content_type = ContentType.objects.get_for_model(ProjectContent)
