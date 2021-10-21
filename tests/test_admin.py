@@ -278,18 +278,24 @@ class ContentExpiryAuthorFilterTestCase(CMSTestCase):
 
 class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
-    def test_content_type_filter(self):
+    def setUp(self):
+        self.expiry_date = datetime.datetime.now() - datetime.timedelta(days=5)
+        self.project_expiry_set = ProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
+        self.project_expiry_c_type = self.project_expiry_set[0].version.content.polymorphic_ctype_id
+        self.art_expiry_set = ArtProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
+        self.art_expiry_c_type = self.art_expiry_set[0].version.content.polymorphic_ctype_id
+        self.research_expiry_set = ResearchProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
+        self.research_expiry_c_type = self.research_expiry_set[0].version.content.polymorphic_ctype_id
+
+    def test_content_type_filter_for_simple_models(self):
         """
         Content type filter should only show relevant content type when filter is selected
         """
-        date = datetime.datetime.now() - datetime.timedelta(days=5)
-
-        poll_content_expiry = PollContentExpiryFactory(expires=date)
+        poll_content_expiry = PollContentExpiryFactory(expires=self.expiry_date)
         version = poll_content_expiry.version
 
         # Testing page content filter with polls content
         content_type = f"?content_type={version.content_type.pk}&state={DRAFT}"
-
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -302,19 +308,12 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
             ordered=False,
         )
 
-    def test_content_type_filter_for_polymorphic_models(self):
+    def test_content_type_filter_for_root_polymorphic_models(self):
         """
+        Root polymorphic models should be shown when the model is selected. No other models should be shown,
+        especially any concrete models that inherited from the polymorphic model.
         """
-        expiry_date = datetime.datetime.now() - datetime.timedelta(days=5)
-
-        project_expiry_set = ProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
-        project_expiry_c_type = project_expiry_set[0].version.content.polymorphic_ctype_id
-        art_expiry_set = ArtProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
-        art_expiry_c_type = art_expiry_set[0].version.content.polymorphic_ctype_id
-        research_expiry_set = ResearchProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
-        research_expiry_c_type = research_expiry_set[0].version.content.polymorphic_ctype_id
-
-        content_type = f"?content_type={project_expiry_c_type}&state={DRAFT}"
+        content_type = f"?content_type={self.project_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -322,12 +321,17 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
-            [project_expiry_set[0].version.pk, project_expiry_set[1].version.pk],
+            [self.project_expiry_set[0].version.pk, self.project_expiry_set[1].version.pk],
             transform=lambda x: x.pk,
             ordered=False,
         )
 
-        content_type = f"?content_type={art_expiry_c_type}&state={DRAFT}"
+    def test_content_type_filter_for_concrete_art_polymorphic_models(self):
+        """
+        Specific concrete models should be shown when the model is selected. No other models should be shown,
+        especially any other models that inherit from the polymorphic model.
+        """
+        content_type = f"?content_type={self.art_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -335,12 +339,17 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
-            [art_expiry_set[0].version.pk, art_expiry_set[1].version.pk],
+            [self.art_expiry_set[0].version.pk, self.art_expiry_set[1].version.pk],
             transform=lambda x: x.pk,
             ordered=False,
         )
 
-        content_type = f"?content_type={research_expiry_c_type}&state={DRAFT}"
+    def test_content_type_filter_for_concrete_research_polymorphic_models(self):
+        """
+        Specific concrete models should be shown when the model is selected. No other models should be shown,
+        especially any other models that inherit from the polymorphic model.
+        """
+        content_type = f"?content_type={self.research_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -348,13 +357,17 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
-            [research_expiry_set[0].version.pk, research_expiry_set[1].version.pk],
+            [self.research_expiry_set[0].version.pk, self.research_expiry_set[1].version.pk],
             transform=lambda x: x.pk,
             ordered=False,
         )
 
-        # Multiples
-        content_type = f"?content_type={research_expiry_c_type},{art_expiry_c_type}&state={DRAFT}"
+    def test_content_type_filter_for_mix_of_concrete_and_root_polymorphic_models(self):
+        """
+        Specific concrete and root models should be shown when the models are selected.
+        No other models should be shown, especially any other models that inherit from the polymorphic model.
+        """
+        content_type = f"?content_type={self.project_expiry_c_type},{self.art_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
@@ -363,10 +376,10 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
             [
-                research_expiry_set[0].version.pk,
-                research_expiry_set[1].version.pk,
-                art_expiry_set[0].version.pk,
-                art_expiry_set[1].version.pk,
+                self.project_expiry_set[0].version.pk,
+                self.project_expiry_set[1].version.pk,
+                self.art_expiry_set[0].version.pk,
+                self.art_expiry_set[1].version.pk,
              ],
             transform=lambda x: x.pk,
             ordered=False,
