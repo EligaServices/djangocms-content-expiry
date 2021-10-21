@@ -1,12 +1,10 @@
-from django.apps import apps
-
 from cms.app_base import CMSAppConfig
 
 from djangocms_versioning.admin import VersioningAdminMixin
 from djangocms_versioning.datastructures import (
-    default_copy,
     PolymorphicVersionableItem,
     VersionableItemAlias,
+    default_copy,
 )
 
 from .models import ArtProjectContent, ProjectContent, ResearchProjectContent

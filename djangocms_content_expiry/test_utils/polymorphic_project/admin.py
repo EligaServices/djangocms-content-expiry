@@ -2,9 +2,9 @@ from django.contrib import admin
 
 from .models import (
     ArtProjectContent,
-    ProjectGrouper,
     ProjectContent,
-    ResearchProjectContent
+    ProjectGrouper,
+    ResearchProjectContent,
 )
 
 

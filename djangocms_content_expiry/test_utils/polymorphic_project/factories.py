@@ -13,9 +13,9 @@ from djangocms_content_expiry.test_utils.factories import (
 )
 
 from .models import (
+    ArtProjectContent,
     ProjectContent,
     ProjectGrouper,
-    ArtProjectContent,
     ResearchProjectContent,
 )
 

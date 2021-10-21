@@ -40,31 +40,40 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             list.append((value.pk, value))
         return list
 
+    def _process_item_for_possible_exclusion(self, expiry_record, content_types, excludes):
+        """
+        Handles polymorphic models that have two content types, where versioning
+        is attached to the abstract model rather than the concrete model.
+
+        Returns a list of expiry pk's to exclude from a queryset.
+        """
+        content = expiry_record.version.content
+
+        # If we have django-polymorphic models, get the concrete content_type
+        if hasattr(content, "polymorphic_ctype"):
+            if content.polymorphic_ctype_id not in content_types:
+                excludes.append(expiry_record.pk)
+        # Otherwise we have standard django models
+        else:
+            model_content_type = ContentType.objects.get_for_model(content)
+            if model_content_type.pk not in content_types:
+                excludes.append(expiry_record.pk)
+        return
+
     def queryset(self, request, queryset):
         content_types = self.value()
-
-        #if hasattr(version.content, "polymorphic_ctype"):
-        #    return version.content.polymorphic_ctype
 
         if not content_types:
             return queryset
 
-        # Ensure that we are matching types
+        # Ensure that we are matching types int vs int
         content_types = [int(ctype) for ctype in content_types.split(',')]
         excludes = []
 
         # Build an exclusion list, this is caused by django-polymorphic models
         # where the Version content_type maps to the higher order model
         for expiry_record in queryset:
-            content = expiry_record.version.content
-
-            if hasattr(content, "polymorphic_ctype"):
-                if content.polymorphic_ctype_id not in content_types:
-                    excludes.append(expiry_record.pk)
-            else:
-                model_content_type = ContentType.objects.get_for_model(content)
-                if model_content_type.pk not in content_types:
-                    excludes.append(expiry_record.pk)
+            self._process_item_for_possible_exclusion(expiry_record, content_types, excludes)
 
         return queryset.exclude(pk__in=excludes)
 
