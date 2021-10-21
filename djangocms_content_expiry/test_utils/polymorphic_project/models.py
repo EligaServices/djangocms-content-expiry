@@ -21,6 +21,11 @@ class ProjectContent(PolymorphicModel):
     def get_absolute_url(self):
         return reverse("admin:polymorphic_project_projectcontent_changelist")
 
+    class Meta:
+        # Important for djangocms-versioning support, without this the GenericForeignKey
+        # on the Version will yield None for the "content"
+        base_manager_name = '_original_manager'
+
 
 class ArtProjectContent(ProjectContent):
     artist = models.CharField(max_length=20)
@@ -31,6 +36,11 @@ class ArtProjectContent(ProjectContent):
     def get_absolute_url(self):
         return reverse("admin:polymorphic_project_artprojectcontent_changelist")
 
+    class Meta:
+        # Important for djangocms-versioning support, without this the GenericForeignKey
+        # on the Version will yield None for the "content"
+        base_manager_name = '_original_manager'
+
 
 class ResearchProjectContent(ProjectContent):
     supervisor = models.CharField(max_length=20)
@@ -40,3 +50,8 @@ class ResearchProjectContent(ProjectContent):
 
     def get_absolute_url(self):
         return reverse("admin:polymorphic_project_researchprojectcontent_changelist")
+
+    class Meta:
+        # Important for djangocms-versioning support, without this the GenericForeignKey
+        # on the Version will yield None for the "content"
+        base_manager_name = '_original_manager'

@@ -24,15 +24,7 @@ from djangocms_content_expiry.test_utils.polymorphic_project.factories import (
     ArtProjectContentExpiryFactory,
     ProjectContentExpiryFactory,
     ResearchProjectContentExpiryFactory,
-    ProjectContentWithVersionFactory,
-    ProjectContentFactory,
-    ProjectContentVersionFactory,
-    ArtProjectContentVersionFactory,
 )
-
-from djangocms_content_expiry.test_utils.polymorphic_project.models import ProjectGrouper, ProjectContent
-
-from djangocms_versioning.models import Version
 
 
 class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
@@ -285,26 +277,6 @@ class ContentExpiryAuthorFilterTestCase(CMSTestCase):
 
 
 class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
-    def _create_django_polymorphic_version(self, content, expiry_date=None, user=None):
-        """
-        FIXME: When fixed this method is redundant and should use factories:
-                Currently django polymorphic models, factory boy and versionings generic
-                foreign key are not playing nicely together.
-                When a version is created via the factories the GenericForeign key is empty even though the
-                content_type and content_type_id are filled.
-        """
-        if not user:
-            user = self.get_superuser()
-
-        #content.__class__ = ProjectContent
-        version = Version.objects.create(content=content, created_by=user)
-        #content.__class__ = content.get_real_instance_class()
-
-        if expiry_date:
-            version.contentexpiry.expires = expiry_date
-            version.contentexpiry.save()
-
-        return version
 
     def test_content_type_filter(self):
         """
@@ -335,36 +307,37 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         """
         expiry_date = datetime.datetime.now() - datetime.timedelta(days=5)
 
-        grouper = ProjectGrouper.objects.create(name="Some name")
-        content = ProjectContent.objects.create(grouper=grouper, topic="some topic")
-        version = self._create_django_polymorphic_version(content)
+        project_expiry_set = ProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
+        project_expiry_c_type = project_expiry_set[0].version.content_type
+        art_expiry_set = ArtProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
+        art_expiry_c_type = art_expiry_set[0].version.content_type
+        research_expiry = ResearchProjectContentExpiryFactory.create_batch(2, expires=expiry_date)
 
-        fetched_version = Version.objects.first()
-
-        self.assertEqual(version.content, content)
-        # FIXME: This fails, for some reason the reverse through version
-        #        to content is None for the actual models and also for the factories
-        #        when using django-polymorphic :-(
-        self.assertEqual(fetched_version.content, content)
-
-        # project_expiry = ProjectContentWithVersionFactory()
-        # project_expiry = ProjectContentExpiryFactory(expires=date)
-        # project_expiry_ctype = project_expiry.version.content_type
-        # art_expiry = ArtProjectContentExpiryFactory.create_batch(2, expires=date)
-        # art_expiry_c_type = art_expiry[0].version.content_type
-        # research_expiry = ResearchProjectContentExpiryFactory.create_batch(2, expires=date)
-        # research_expiry_c_type = research_expiry[0].version.content_type
-
-        poll_content_expiry = PollContentExpiryFactory(expires=date)
-        poll_content_ctype = poll_content_expiry.version.content_type
-
-        # Testing page content filter with polls content
-        content_type = f"?content_type={project_expiry_ctype.pk}&state={DRAFT}"
-
+        content_type = f"?content_type={project_expiry_c_type.pk}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(admin_endpoint + content_type)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [project_expiry_set[0].version.pk, project_expiry_set[1].version.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
+
+        content_type = f"?content_type={art_expiry_c_type.pk}&state={DRAFT}"
+        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(admin_endpoint + content_type)
+
+        self.assertQuerysetEqual(
+            response.context["cl"].queryset,
+            [art_expiry_set[0].version.pk, art_expiry_set[1].version.pk],
+            transform=lambda x: x.pk,
+            ordered=False,
+        )
 
 
 class ContentExpiryChangelistVersionFilterTestCase(CMSTestCase):
