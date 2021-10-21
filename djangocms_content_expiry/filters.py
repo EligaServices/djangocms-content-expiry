@@ -42,6 +42,11 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
 
     def queryset(self, request, queryset):
         content_type = self.value()
+
+        #if hasattr(version.content, "polymorphic_ctype"):
+        #    return version.content.polymorphic_ctype
+
+
         if not content_type:
             return queryset
         return queryset.filter(version__content_type__in=content_type.split(','))
