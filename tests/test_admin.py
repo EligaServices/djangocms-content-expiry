@@ -1,10 +1,8 @@
-import csv
 import datetime
 from unittest.mock import patch
 
 from django.apps import apps
 from django.contrib import admin
-from django.test import RequestFactory
 
 from cms.test_utils.testcases import CMSTestCase
 
