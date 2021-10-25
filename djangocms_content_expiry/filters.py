@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
@@ -56,26 +57,49 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
                 excludes.append(expiry_record.pk)
         # Otherwise we have standard django models
         else:
-            model_content_type = ContentType.objects.get_for_model(content)
-            if model_content_type.pk not in content_types:
+            if expiry_record.version.content_type.pk not in content_types:
                 excludes.append(expiry_record.pk)
 
     def queryset(self, request, queryset):
-        content_types = self.value()
-
-        if not content_types:
+        content_type = self.value()
+        if not content_type:
             return queryset
 
-        # Ensure that we are matching types int vs int
-        content_types = [int(ctype) for ctype in content_types.split(',')]
-        excludes = []
+        """
+        Jon: https://github.com/jazzband/django-model-utils/issues/414
+        
+        Prefetch generic content types of many types
+        
+        for each content type selected chain a prefetch??
+        
+        Get content types selected, 
+        for each submit to a CTE
+        
+        TODO: Reverse the 
+        """
 
-        # Build an exclusion list, this is caused by django-polymorphic models
-        # where the Version content_type maps to the higher order model
-        for expiry_record in queryset:
-            self._process_item_for_possible_exclusion(expiry_record, content_types, excludes)
+        queryset.prefetch_related(
+            Prefetch('version__content'),
+            queryset=ContentType.objects.get_for_model(model?????)
+        )
 
-        return queryset.exclude(pk__in=excludes)
+        return queryset.filter(version__content_type__in=content_type.split(','))
+
+        # content_types = self.value()
+        #
+        # if not content_types:
+        #     return queryset
+        #
+        # # Ensure that we are matching types int vs int
+        # content_types = [int(ctype) for ctype in content_types.split(',')]
+        # excludes = []
+        #
+        # # Build an exclusion list, this is caused by django-polymorphic models
+        # # where the Version content_type maps to the higher order model
+        # for expiry_record in queryset:
+        #     self._process_item_for_possible_exclusion(expiry_record, content_types, excludes)
+        #
+        # return queryset.exclude(pk__in=excludes)
 
     def choices(self, changelist):
         yield {
