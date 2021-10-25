@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 from django.conf.urls import url
 from django.contrib import admin
@@ -6,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
+from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 from .filters import (
     AuthorFilter,
     ContentExpiryDateRangeFilter,
@@ -85,6 +87,17 @@ class ContentExpiryAdmin(admin.ModelAdmin):
             ),
         ] + super().get_urls()
 
+    def _format_export_datetime(self, date, date_format=DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT):
+        """
+        date: DateTime object
+        date_format: String, date time string format for strftime
+
+        Returns a formatted human readable date time string
+        """
+        if isinstance(date, datetime.date):
+            return date.strftime(date_format)
+        return ""
+
     def export_to_csv(self, request):
         """
         Retrieves the queryset and exports to csv format
@@ -100,7 +113,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         for row in queryset:
             title = row.version.content
             content_type = ContentType.objects.get_for_model(row.version.content)
-            expiry_date = row.expires
+            expiry_date = self._format_export_datetime(row.expires)
             version_state = row.version.get_state_display()
             version_author = row.version.created_by
             writer.writerow([title, content_type, expiry_date, version_state, version_author])
