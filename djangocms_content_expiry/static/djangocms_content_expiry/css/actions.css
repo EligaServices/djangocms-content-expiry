@@ -1,6 +1,6 @@
 a.btn.cms-content-expiry-action-btn {
     position: relative;
-    display: -webkit-inline-flex;
+    display: -webkit-inline-box;
     display: -ms-inline-flexbox;
     display: inline-flex;
     padding: 0 !important;
@@ -19,12 +19,23 @@ a.btn.cms-content-expiry-action-btn {
     -webkit-box-sizing: border-box;
             box-sizing: border-box;
 }
-a.btn.cms-content-expiry-btn img {
+a.btn.cms-content-expiry-action-btn img {
     width: 20px;
     height: 20px;
+    float: left;
+    display: inline-block;
 }
-
-a.btn.cms-content-expiry-btn.inactive {
-    opacity: 0.3;
-    filter: alpha(opacity=30);
+a.btn.cms-content-expiry-action-btn span {
+    width: 20px;
+    height: 20px;
+    margin-top: 6px;
+    float: left;
+    display: inline-block;
+}
+span.svg-juxtaposed-font {
+    text-rendering: auto;
+    display: inline-block;
+    line-height: 1rem;
+    vertical-align: 20%;
+    margin-top: -2px !important;
 }
