@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.contrib import admin
+from django.utils import timezone
 
 from cms.test_utils.testcases import CMSTestCase
 
@@ -626,7 +627,9 @@ class ContentExpiryCsvExportFilterSettingsTestCase(CMSTestCase):
 
 class ContentExpiryCsvExportFileTestCase(CMSTestCase):
     def setUp(self):
-        self.date = datetime.datetime.now() - datetime.timedelta(days=5)
+        # Use a timezone aware time due to the admin using a timezone
+        # which causes a datetime mismatch for the CSV view
+        self.date = timezone.now() - datetime.timedelta(days=5)
         # CSV Headings: 0 -> Title, 1 -> Content Type, 2 -> Expiry Date, 3 -> Version State, 4 -> Author
         self.headings_map = {
             "title": 0, "ctype": 1, "expiry_date": 2, "version_state": 3, "version_author": 4
@@ -637,7 +640,7 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         """
         Valid csv file is returned from the admin export endpoint
         """
-        PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
+        poll = PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
 
         version_selection = "?state=_all_"
 
@@ -720,7 +723,7 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         )
         self.assertEqual(
             content_row_1[self.headings_map["version_author"]],
-            content_expiry.created_by
+            content_expiry.version.created_by.username
         )
 
     def test_export_button_is_visible(self):
