@@ -634,7 +634,7 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         self.headings_map = {
             "title": 0, "ctype": 1, "expiry_date": 2, "version_state": 3, "version_author": 4
         }
-        self.admin_endpoint = self.get_admin_url(ContentExpiry, "export_csv")
+        self.export_admin_endpoint = self.get_admin_url(ContentExpiry, "export_csv") + "?state=_all_"
 
     def test_export_button_endpoint_response_is_a_csv(self):
         """
@@ -642,10 +642,8 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         """
         PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
 
-        version_selection = "?state=_all_"
-
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + version_selection)
+            response = self.client.get(self.export_admin_endpoint)
 
         # Endpoint is returning 200 status code
         self.assertEqual(response.status_code, 200)
@@ -662,7 +660,7 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + "?state=_all_")
+            response = self.client.get(self.export_admin_endpoint)
 
         csv_headings = response.content.decode().splitlines()[0].split(",")
 
@@ -691,19 +689,22 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
 
     def test_file_content_contains_values(self):
         """
-        CSV response should contain expected values
+        CSV response should contain expected values.
+
+        The dates stored for expiry date are stored with the servers timezone attached, the export
+        is exported as UTC so the date time wil be converted hence the need to use a timezone aware
+        datetime expiry date object.
         """
         content_expiry = PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
 
-        version_selection = "?state=_all_"
-
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + version_selection)
+            response = self.client.get(self.export_admin_endpoint)
+
+        self.assertEqual(response.status_code, 200)
 
         csv_lines = response.content.decode().splitlines()
         content_row_1 = csv_lines[1].split(",")
 
-        self.assertEqual(response.status_code, 200)
         # The following contents should be present
         self.assertEqual(
             content_row_1[self.headings_map["title"]],

@@ -49,7 +49,7 @@ The default Content Expiry creation expiry date defaults to 12 months. This is t
 
 Setting: CMS_CONTENT_EXPIRY_DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 ---------------------------------------------------------------------
-The default string format that should be exported for the expiry date in the csv file export. Uses formats suitable for python datetime strftime. Defaults to: "%Y/%m/%d %H:%M"
+The default string format that should be exported for the expiry date in the csv file export. Uses formats suitable for python datetime strftime. The default is set as: "%Y/%m/%d %H:%M %z"
 
     CMS_CONTENT_EXPIRY_DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 

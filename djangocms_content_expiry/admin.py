@@ -130,20 +130,21 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         search_fields = self.get_search_fields(request)
         changelist = self.get_changelist(request)
 
-        changelist_kwargs = {'request': request,
-                             'model': self.model,
-                             'list_display': list_display,
-                             'list_display_links': list_display_links,
-                             'list_filter': list_filter,
-                             'date_hierarchy': self.date_hierarchy,
-                             'search_fields': search_fields,
-                             'list_select_related': self.list_select_related,
-                             'list_per_page': self.list_per_page,
-                             'list_max_show_all': self.list_max_show_all,
-                             'list_editable': self.list_editable,
-                             'model_admin': self,
-                             'sortable_by': self.sortable_by
-                             }
+        changelist_kwargs = {
+            'request': request,
+             'model': self.model,
+             'list_display': list_display,
+             'list_display_links': list_display_links,
+             'list_filter': list_filter,
+             'date_hierarchy': self.date_hierarchy,
+             'search_fields': search_fields,
+             'list_select_related': self.list_select_related,
+             'list_per_page': self.list_per_page,
+             'list_max_show_all': self.list_max_show_all,
+             'list_editable': self.list_editable,
+             'model_admin': self,
+             'sortable_by': self.sortable_by
+        }
         cl = changelist(**changelist_kwargs)
 
         return cl.get_queryset(request)
