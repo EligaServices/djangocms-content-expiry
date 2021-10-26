@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.html import format_html_join
 from django.utils.translation import ugettext_lazy as _
 
@@ -24,6 +25,7 @@ from .models import ContentExpiry, DefaultContentExpiryConfiguration
 @admin.register(ContentExpiry)
 class ContentExpiryAdmin(admin.ModelAdmin):
     list_display = ['title', 'content_type', 'expires', 'version_state', 'version_author']
+    list_display_links = None
     list_filter = (ContentTypeFilter, ('expires', ContentExpiryDateRangeFilter), VersionStateFilter, AuthorFilter)
     form = ContentExpiryForm
     change_list_template = "djangocms_content_expiry/admin/change_list.html"
@@ -47,9 +49,14 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         return False
 
     def get_list_display(self, request):
-        list_display = self.list_display
-        list_display += (self.list_display_actions(request),)
-        return list_display
+        return [
+            "title",
+            "content_type",
+            "expires",
+            "version_state",
+            "version_author",
+            self.list_display_actions(request),
+        ]
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -119,16 +126,28 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         return list_actions
 
     def _get_preview_link(self, obj, request):
+        url = ""
+
+        if hasattr(obj.version, "get_preview_url"):
+            url = obj.version.get_preview_url()
+
         return render_to_string(
             "djangocms_content_expiry/admin/icons/preview_action_icon.html", {
-                "url": "view_endpoint",
+                "url": url,
             }
         )
 
     def _get_edit_link(self, obj, request):
+        archive_url = reverse(
+            "admin:{app}_{model}_archive".format(
+                app=obj._meta.app_label, model=self.model._meta.model_name
+            ),
+            args=(obj.pk,),
+        )
+
         return render_to_string(
             "djangocms_content_expiry/admin/icons/edit_action_icon.html", {
-                "url": "view_endpoint",
+                "url": archive_url,
             }
         )
 
