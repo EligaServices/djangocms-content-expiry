@@ -99,7 +99,7 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         self.assertTrue('expires' in context)
         self.assertTrue('version_state' in context)
         self.assertTrue('version_author' in context)
-        self.assertTrue('list_display_actions' in context)
+        self.assertTrue('actions' in context)
 
 
 class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):

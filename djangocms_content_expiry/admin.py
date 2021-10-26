@@ -46,7 +46,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         list_display = self.list_display
         if "list_display_actions" not in list_display:
-            list_display += ('list_display_actions',)
+            list_display += (self.list_display_actions(request),)
         return list_display
 
     def get_urls(self):
@@ -116,14 +116,14 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         list_actions.short_description = _("actions")
         return list_actions
 
-    def _get_preview_link(self, obj):
+    def _get_preview_link(self, obj, request):
         return render_to_string(
             "djangocms_content_expiry/admin/icons/preview_action_icon.html", {
                 "url": "view_endpoint",
             }
         )
 
-    def _get_edit_link(self, obj):
+    def _get_edit_link(self, obj, request):
         return render_to_string(
             "djangocms_content_expiry/admin/icons/edit_action_icon.html", {
                 "url": "view_endpoint",
