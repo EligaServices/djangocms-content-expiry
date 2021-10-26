@@ -692,7 +692,7 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         CSV response should contain expected values.
 
         The dates stored for expiry date are stored with the servers timezone attached, the export
-        is exported as UTC so the date time wil be converted hence the need to use a timezone aware
+        is exported as UTC so the date time will be converted hence the need to use a timezone aware
         datetime expiry date object.
         """
         content_expiry = PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
