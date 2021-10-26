@@ -139,7 +139,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     def _get_edit_link(self, obj, request):
         archive_url = reverse(
-            "admin:{app}_{model}_archive".format(
+            "admin:{app}_{model}_change".format(
                 app=obj._meta.app_label, model=self.model._meta.model_name
             ),
             args=(obj.pk,),
