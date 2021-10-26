@@ -30,8 +30,11 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     class Media:
         css = {
-            'all': ('djangocms_content_expiry/css/date_filter.css',
-                    'djangocms_content_expiry/css/multiselect_filter.css',)
+            'all': (
+                'djangocms_content_expiry/css/actions.css',
+                'djangocms_content_expiry/css/date_filter.css',
+                'djangocms_content_expiry/css/multiselect_filter.css',
+            )
         }
 
     def has_add_permission(self, *args, **kwargs):
@@ -45,8 +48,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         list_display = self.list_display
-        if "list_display_actions" not in list_display:
-            list_display += (self.list_display_actions(request),)
+        list_display += (self.list_display_actions(request),)
         return list_display
 
     def get_urls(self):
