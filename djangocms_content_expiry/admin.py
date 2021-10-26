@@ -5,6 +5,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.utils.html import format_html_join
 from django.utils.translation import ugettext_lazy as _
 
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
@@ -40,6 +42,22 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         # Deletion should never be possible, the only way that a
         # content expiry record could be deleted is via versioning.
         return False
+
+    def get_list_display(self, request):
+        list_display = self.list_display
+        if "list_display_actions" not in list_display:
+            list_display += ('list_display_actions',)
+        return list_display
+
+    def get_urls(self):
+        info = self.model._meta.app_label, self.model._meta.model_name
+        return [
+            url(
+                r'^export_csv/$',
+                self.admin_site.admin_view(self.export_to_csv),
+                name="{}_{}_export_csv".format(*info),
+            ),
+        ] + super().get_urls()
 
     def get_rangefilter_expires_default(self, *args, **kwargs):
         return get_rangefilter_expires_default()
@@ -77,15 +95,40 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         return obj.version.created_by
     version_author.short_description = _('Version author')
 
-    def get_urls(self):
-        info = self.model._meta.app_label, self.model._meta.model_name
-        return [
-            url(
-                r'^export_csv/$',
-                self.admin_site.admin_view(self.export_to_csv),
-                name="{}_{}_export_csv".format(*info),
-            ),
-        ] + super().get_urls()
+    def list_display_actions(self, request):
+        """
+        A closure that makes it possible to pass request object to
+        list action button functions.
+        """
+        actions = [
+            self._get_preview_link,
+            self._get_edit_link,
+        ]
+
+        def list_actions(obj):
+            """
+            Display links to state change endpoints
+            """
+            return format_html_join(
+                "", "{}", ((action(obj, request),) for action in actions)
+            )
+
+        list_actions.short_description = _("actions")
+        return list_actions
+
+    def _get_preview_link(self, obj):
+        return render_to_string(
+            "djangocms_content_expiry/admin/icons/preview_action_icon.html", {
+                "url": "view_endpoint",
+            }
+        )
+
+    def _get_edit_link(self, obj):
+        return render_to_string(
+            "djangocms_content_expiry/admin/icons/edit_action_icon.html", {
+                "url": "view_endpoint",
+            }
+        )
 
     def _format_export_datetime(self, date, date_format=DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT):
         """
