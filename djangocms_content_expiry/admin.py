@@ -126,14 +126,13 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         return list_actions
 
     def _get_preview_link(self, obj, request):
-        url = ""
-
-        if hasattr(obj.version, "get_preview_url"):
-            url = obj.version.get_preview_url()
+        preview_url = ""
+        if hasattr(obj.version.content, "get_preview_url"):
+            preview_url = obj.version.content.get_preview_url()
 
         return render_to_string(
             "djangocms_content_expiry/admin/icons/preview_action_icon.html", {
-                "url": url,
+                "url": preview_url,
             }
         )
 
