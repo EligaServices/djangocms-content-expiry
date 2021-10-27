@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils.html import format_html_join
 from django.utils.translation import ugettext_lazy as _
 
+from djangocms_versioning.constants import PUBLISHED
 from djangocms_versioning.helpers import get_preview_url
 
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
@@ -135,8 +136,14 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         :returns: A valid preview url to link to the content object
         """
         content_obj = obj.version.content
+        # If the version is published, first try and get a "live" url
+        if obj.version.state == PUBLISHED:
+            if hasattr(content_obj, "get_absolute_url"):
+                return content_obj.get_absolute_url()
+        # If the content object has a preview url, get it
         if hasattr(content_obj, "get_preview_url"):
             return content_obj.get_preview_url()
+        # Otherwise, all else has failed, try and get a preview url
         return get_preview_url(content_obj)
 
     def _get_preview_link(self, obj, request):
