@@ -129,10 +129,10 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     def _get_preview_url(self, obj):
         """
-        Return the preview method if available, otherwise get a preview url
-        from the content with the help of versioning
+        Find a valid preview url for a content object.
 
-        :return: preview url
+        :param obj: this is a content expiry object
+        :returns: A valid preview url to link to the content object
         """
         content_obj = obj.version.content
         if hasattr(content_obj, "get_preview_url"):
@@ -140,6 +140,13 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         return get_preview_url(content_obj)
 
     def _get_preview_link(self, obj, request):
+        """
+        Build a link to preview the content object from the supplied content object.
+
+        :param obj: A content expiry object
+        :param request: A request object
+        :returns: An edit link to the supplied content expiry record
+        """
         preview_url = self._get_preview_url(obj)
 
         return render_to_string(
@@ -149,6 +156,13 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         )
 
     def _get_edit_link(self, obj, request):
+        """
+        Build a link to edit the content expiry object.
+
+        :param obj: A content expiry object
+        :param request: A request object
+        :returns: An edit link to the supplied content expiry record
+        """
         archive_url = reverse(
             "admin:{app}_{model}_change".format(
                 app=obj._meta.app_label, model=self.model._meta.model_name
@@ -164,10 +178,11 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
     def _format_export_datetime(self, date, date_format=DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT):
         """
-        date: DateTime object
-        date_format: String, date time string format for strftime
+        Format a supplied date object.
 
-        Returns a formatted human readable date time string
+        :param date: DateTime object
+        :param date_format: String, date time string format for strftime
+        :returns: A formatted human readable date time string
         """
         if isinstance(date, datetime.date):
             return date.strftime(date_format)
