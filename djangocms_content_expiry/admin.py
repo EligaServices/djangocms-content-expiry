@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.utils.html import format_html_join
 from django.utils.translation import ugettext_lazy as _
 
+from djangocms_versioning.helpers import get_preview_url
+
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 from .filters import (
     AuthorFilter,
@@ -125,10 +127,19 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         list_actions.short_description = _("actions")
         return list_actions
 
-    def _get_preview_link(self, obj, request):
-        preview_url = ""
+    def _get_preview_url(self, obj):
+        """
+        Return the preview method if available, otherwise get a preview url
+        from the content with the help of versioning
+
+        :return: preview url
+        """
         if hasattr(obj.version.content, "get_preview_url"):
-            preview_url = obj.version.content.get_preview_url()
+            return obj.version.content.get_preview_url()
+        return get_preview_url(obj)
+
+    def _get_preview_link(self, obj, request):
+        preview_url = self._get_preview_url(obj)
 
         return render_to_string(
             "djangocms_content_expiry/admin/icons/preview_action_icon.html", {
