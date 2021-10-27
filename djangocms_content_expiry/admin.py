@@ -111,6 +111,9 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         """
         A closure that makes it possible to pass request object to
         list action button functions.
+
+        :param request: a request object
+        :returns: A callable for the changelist to render icons
         """
         actions = [
             self._get_preview_link,
@@ -201,19 +204,33 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         """
         queryset = self.get_exported_queryset(request)
         meta = self.model._meta
-        field_names = ['Title', 'Content Type', 'Expiry Date', 'Version State', 'Version Author']
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
         writer = csv.writer(response)
-        writer.writerow(field_names)
+        # Write the header to the file
+        writer.writerow([
+            'Title',
+            'Content Type',
+            'Expiry Date',
+            'Version State',
+            'Version Author',
+            'Url'
+        ])
 
-        for row in queryset:
-            title = row.version.content
-            content_type = ContentType.objects.get_for_model(row.version.content)
-            expiry_date = self._format_export_datetime(row.expires)
-            version_state = row.version.get_state_display()
-            version_author = row.version.created_by
-            writer.writerow([title, content_type, expiry_date, version_state, version_author])
+        for content_expiry in queryset:
+            content_type = ContentType.objects.get_for_model(content_expiry.version.content)
+            expiry_date = self._format_export_datetime(content_expiry.expires)
+            version_state = content_expiry.version.get_state_display()
+            content_url = self._get_preview_url(content_expiry)
+            # Write a row to the file
+            writer.writerow([
+                content_expiry.version.content,
+                content_type,
+                expiry_date,
+                version_state,
+                content_expiry.version.created_by,
+                content_url,
+            ])
 
         return response
 
