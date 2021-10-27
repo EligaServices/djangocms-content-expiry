@@ -134,9 +134,10 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
         :return: preview url
         """
-        if hasattr(obj.version.content, "get_preview_url"):
-            return obj.version.content.get_preview_url()
-        return get_preview_url(obj)
+        content_obj = obj.version.content
+        if hasattr(content_obj, "get_preview_url"):
+            return content_obj.get_preview_url()
+        return get_preview_url(content_obj)
 
     def _get_preview_link(self, obj, request):
         preview_url = self._get_preview_url(obj)
