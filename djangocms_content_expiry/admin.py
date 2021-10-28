@@ -1,12 +1,17 @@
 import csv
 import datetime
+import operator
 
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
+from django.db.models import Q
+
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
+
+from functools import reduce
 
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 from .filters import (
@@ -34,14 +39,16 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         }
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        # By default all queries should be bound to the date filter
-        if not any('expires__range' in seed for seed in request.GET):
-            default_gte, default_lte = get_rangefilter_expires_default()
-            queryset = queryset.filter(expires__range=(default_gte, default_lte))
+
 
         # For each content type with site limit the queryset
         current_site = get_current_site(request)
+        """
+        for content_type in _cms_extension().versionables_by_content:
+            value = ContentType.objects.get_for_model(content_type)
+        
+        """
+        filters = []
 
         # PageContent = Expiry->Version->Content->Page->Node->Site
         from cms.models import PageContent
@@ -53,10 +60,29 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
         page_content_ctype = ContentType.objects.get_for_model(PageContent)
         site_page_contents = get_page_content_site_objects(current_site)
-        queryset = queryset.filter(version__content_type=page_content_ctype, version__object_id__in=site_page_contents)
+        filters.append(
+            Q(version__content_type=page_content_ctype, version__object_id__in=site_page_contents)
+        )
 
         # Alias = Expiry->Version->Content->Alias->site
+        from djangocms_alias.models import AliasContent
+        def get_alias_content_site_objects(site):
+            queryset = AliasContent._original_manager.filter(Q(alias__site=site) | Q(alias__site__isnull=True))
+            return queryset.select_related('alias')
+
+        # Get all content types for site
+        # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
+        alias_content_ctype = ContentType.objects.get_for_model(AliasContent)
+        site_alias_contents = get_alias_content_site_objects(current_site)
+        filters.append(
+            Q(version__content_type=alias_content_ctype, version__object_id__in=site_alias_contents)
+        )
+
         # Navigation = Expiry->Version->Content->Menu->site
+
+        queryset = ContentExpiry.objects.filter(
+            reduce(operator.or_, filters)
+        )
 
         return queryset
 
