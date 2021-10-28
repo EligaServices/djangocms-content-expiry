@@ -4,6 +4,7 @@ import datetime
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
@@ -31,6 +32,33 @@ class ContentExpiryAdmin(admin.ModelAdmin):
             'all': ('djangocms_content_expiry/css/date_filter.css',
                     'djangocms_content_expiry/css/multiselect_filter.css',)
         }
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        # By default all queries should be bound to the date filter
+        if not any('expires__range' in seed for seed in request.GET):
+            default_gte, default_lte = get_rangefilter_expires_default()
+            queryset = queryset.filter(expires__range=(default_gte, default_lte))
+
+        # For each content type with site limit the queryset
+        current_site = get_current_site(request)
+
+        # PageContent = Expiry->Version->Content->Page->Node->Site
+        from cms.models import PageContent
+        def get_page_content_site_objects(site):
+            queryset = PageContent._original_manager.filter(page__node__site=site)
+            return queryset.select_related('page__node')
+
+        # Get all content types for site
+        # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
+        page_content_ctype = ContentType.objects.get_for_model(PageContent)
+        site_page_contents = get_page_content_site_objects(current_site)
+        queryset = queryset.filter(version__content_type=page_content_ctype, version__object_id__in=site_page_contents)
+
+        # Alias = Expiry->Version->Content->Alias->site
+        # Navigation = Expiry->Version->Content->Menu->site
+
+        return queryset
 
     def has_add_permission(self, *args, **kwargs):
         # Entries are added automatically
