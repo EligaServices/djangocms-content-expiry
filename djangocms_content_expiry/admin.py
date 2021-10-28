@@ -64,20 +64,23 @@ class ContentExpiryAdmin(admin.ModelAdmin):
             version__content_type=page_content_ctype, version__object_id__in=site_page_contents
         )
 
-        # Alias = Expiry->Version->Content->Alias->site
-        from djangocms_alias.models import AliasContent
-        def get_alias_content_site_objects(site):
-            alias_queryset = AliasContent._original_manager.exclude(Q(alias__site=site) | Q(alias__site__isnull=True))
-            #queryset = AliasContent._original_manager.filter(alias__site=site, alias__site__isnull=False))
-            return alias_queryset.select_related('alias')
+        try:
+            # Alias = Expiry->Version->Content->Alias->site
+            from djangocms_alias.models import AliasContent
+            def get_alias_content_site_objects(site):
+                alias_queryset = AliasContent._original_manager.exclude(Q(alias__site=site) | Q(alias__site__isnull=True))
+                #queryset = AliasContent._original_manager.filter(alias__site=site, alias__site__isnull=False))
+                return alias_queryset.select_related('alias')
 
-        # Get all content types for site
-        # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
-        alias_content_ctype = ContentType.objects.get_for_model(AliasContent)
-        site_alias_contents = get_alias_content_site_objects(current_site)
-        queryset = queryset.exclude(
-            version__content_type=alias_content_ctype, version__object_id__in=site_alias_contents
-        )
+            # Get all content types for site
+            # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
+            alias_content_ctype = ContentType.objects.get_for_model(AliasContent)
+            site_alias_contents = get_alias_content_site_objects(current_site)
+            queryset = queryset.exclude(
+                version__content_type=alias_content_ctype, version__object_id__in=site_alias_contents
+            )
+        except:
+            pass
 
         # Navigation = Expiry->Version->Content->Menu->site
 
