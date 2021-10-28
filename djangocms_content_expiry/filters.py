@@ -178,4 +178,13 @@ class AuthorFilter(admin.SimpleListFilter):
 
 
 class ContentExpiryDateRangeFilter(DateRangeFilter):
-    pass
+        def queryset(self, request, queryset):
+            queryset = super().queryset(request, queryset)
+
+            # By default the widget should default to show a default duration and not all content
+            # expiry records
+            if not any('expires__range' in seed for seed in request.GET):
+                default_gte, default_lte = get_rangefilter_expires_default()
+                queryset = queryset.filter(expires__range=(default_gte, default_lte))
+
+            return queryset
