@@ -162,7 +162,6 @@ class ContentExpiryAuthorFilterTestCase(CMSTestCase):
         expiry_other_authors = PollContentExpiryFactory.create_batch(4, expires=date, version__state=PUBLISHED)
 
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-        # url_all = f"?state=_all_"
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(admin_endpoint)
 
