@@ -129,7 +129,7 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         # Use a timezone aware time due to the admin using a timezone
         # which causes a datetime mismatch for the CSV view
         self.date = timezone.now() + datetime.timedelta(days=5)
-        # CSV Headings: 0 -> Title, 1 -> Content Type, 2 -> Expiry Date, 3 -> Version State, 4 -> Author
+        # CSV Headings: 0 -> Title, 1 -> Content Type, 2 -> Expiry Date, 3 -> Version State, 4 -> Author, 5 -> Url
         self.headings_map = {
             "title": 0,
             "ctype": 1,
