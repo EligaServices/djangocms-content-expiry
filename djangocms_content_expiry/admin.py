@@ -1,17 +1,14 @@
 import csv
 import datetime
-import operator
 
+from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import Q
 
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
-
-from functools import reduce
 
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 from .filters import (
@@ -41,80 +38,10 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
-        # For each content type with site limit the queryset
         current_site = get_current_site(request)
-
-        # PageContent = Expiry->Version->Content->Page->Node->Site
-        from django.db import models
-        from cms.models import PageContent
-
-        def get_page_content_site_objects(site, queryset):
-            """
-            Returns a queryset list of objects ContentExpiry records that are not part of this
-            site and should be excluded!
-            """
-            page_content_ctype = ContentType.objects.get_for_model(PageContent)
-
-            # Generic foreign key can't currently handle exclusions on a generic foreign key:
-            # queryset.exclude(version__cms_pagecontent__page__node__site=site)
-            # https://code.djangoproject.com/ticket/26261
-            expiry_othersite__queryset = queryset.annotate(
-                is_bound_to_site=models.Case(
-                    models.When(
-                        Q(version__content_type=page_content_ctype) |
-                        ~Q(version__cms_pagecontent__page__node__site=site),
-                        then=models.Value(True),
-                    ),
-                    default=models.Value(False),
-                    output_field=models.BooleanField(),
-                )
-            ).filter(is_bound_to_site=False)
-
-            return expiry_othersite__queryset
-
-        exclusion_list = get_page_content_site_objects(current_site, queryset)
-
-        queryset = queryset.exclude(pk__in=exclusion_list.values('pk'))
-
-        """
-        # PageContent = Expiry->Version->Content->Page->Node->Site
-        from cms.models import PageContent
-        def get_page_content_site_objects(site):
-            page_queryset = PageContent._original_manager.exclude(page__node__site=site)
-            return page_queryset.select_related('page__node')
-
-        # Get all content types for site
-        # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
-        page_content_ctype = ContentType.objects.get_for_model(PageContent)
-        site_page_contents = get_page_content_site_objects(current_site)
-        queryset = queryset.exclude(
-            version__content_type=page_content_ctype, version__object_id__in=site_page_contents
-        )
-        """
-
-        try:
-            # Alias = Expiry->Version->Content->Alias->site
-            from djangocms_alias.models import AliasContent
-            def get_alias_content_site_objects(site):
-                alias_queryset = AliasContent._original_manager.exclude(Q(alias__site=site) | Q(alias__site__isnull=True))
-                #queryset = AliasContent._original_manager.filter(alias__site=site, alias__site__isnull=False))
-                return alias_queryset.select_related('alias')
-
-            # Get all content types for site
-            # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/#reverse-generic-relations
-            alias_content_ctype = ContentType.objects.get_for_model(AliasContent)
-            site_alias_contents = get_alias_content_site_objects(current_site)
-            queryset = queryset.exclude(
-                version__content_type=alias_content_ctype, version__object_id__in=site_alias_contents
-            )
-        except:
-            pass
-
-        # Navigation = Expiry->Version->Content->Menu->site
-
-        # queryset = ContentExpiry.objects.filter(
-        #     reduce(operator.or_, filters)
-        # )
+        app_config = apps.get_app_config("djangocms_content_expiry")
+        for content_model_filter in app_config.cms_extension.expiry_changelist_queryset_filters:
+            queryset = content_model_filter(current_site, queryset)
 
         return queryset
 
