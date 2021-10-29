@@ -43,13 +43,40 @@ class ContentExpiryAdmin(admin.ModelAdmin):
 
         # For each content type with site limit the queryset
         current_site = get_current_site(request)
-        """
-        for content_type in _cms_extension().versionables_by_content:
-            value = ContentType.objects.get_for_model(content_type)
-        
-        """
-        filters = []
 
+        # PageContent = Expiry->Version->Content->Page->Node->Site
+        from django.db import models
+        from cms.models import PageContent
+
+        def get_page_content_site_objects(site, queryset):
+            """
+            Returns a queryset list of objects ContentExpiry records that are not part of this
+            site and should be excluded!
+            """
+            page_content_ctype = ContentType.objects.get_for_model(PageContent)
+
+            # Generic foreign key can't currently handle exclusions on a generic foreign key:
+            # queryset.exclude(version__cms_pagecontent__page__node__site=site)
+            # https://code.djangoproject.com/ticket/26261
+            expiry_othersite__queryset = queryset.annotate(
+                is_bound_to_site=models.Case(
+                    models.When(
+                        Q(version__content_type=page_content_ctype) |
+                        ~Q(version__cms_pagecontent__page__node__site=site),
+                        then=models.Value(True),
+                    ),
+                    default=models.Value(False),
+                    output_field=models.BooleanField(),
+                )
+            ).filter(is_bound_to_site=False)
+
+            return expiry_othersite__queryset
+
+        exclusion_list = get_page_content_site_objects(current_site, queryset)
+
+        queryset = queryset.exclude(pk__in=exclusion_list.values('pk'))
+
+        """
         # PageContent = Expiry->Version->Content->Page->Node->Site
         from cms.models import PageContent
         def get_page_content_site_objects(site):
@@ -63,6 +90,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         queryset = queryset.exclude(
             version__content_type=page_content_ctype, version__object_id__in=site_page_contents
         )
+        """
 
         try:
             # Alias = Expiry->Version->Content->Alias->site
