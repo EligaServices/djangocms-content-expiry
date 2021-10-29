@@ -527,7 +527,6 @@ class ContentExpiryCsvExportFilterSettingsTestCase(CMSTestCase):
 
         with self.login_user_context(self.get_superuser()):
             url_date_range = f"?expires__range__gte={from_date.date()}&expires__range__lte={to_date.date()}"
-            # admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
             response = self.client.get(self.admin_endpoint + url_date_range)
 
         response_content = response.content.decode()
