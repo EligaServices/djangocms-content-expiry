@@ -480,7 +480,7 @@ class ContentExpiryCsvExportFilterSettingsTestCase(CMSTestCase):
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(self.admin_endpoint + content_type)
 
-        self.assertIn(response, 'poll content')
+        self.assertContains(response, 'poll content')
 
     @freeze_time("2200-01-14")
     @patch('djangocms_content_expiry.helpers.DEFAULT_RANGEFILTER_DELTA', 15)
