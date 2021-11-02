@@ -24,7 +24,12 @@ HELPER_SETTINGS = {
     ),
     "CMS_LANGUAGES": {
         1: [
-            {"code": "en", "name": "English", "fallbacks": ["de", "fr"]},
+            {
+                "code": "en",
+                "name":
+                "English",
+                "fallbacks": ["de", "fr"],
+            },
             {
                 "code": "de",
                 "name": "Deutsche",
@@ -40,7 +45,20 @@ HELPER_SETTINGS = {
                 "name": "Italiano",
                 "fallbacks": ["fr"],  # FOR TESTING, LEAVE AS ONLY 'fr'
             },
-        ]
+        ],
+        2: [
+            {
+                "code": "en",
+                "name":
+                "English",
+                "fallbacks": ["it"],
+            },
+            {
+                "code": "it",
+                "name": "Italiano",
+                "fallbacks": [],
+            },
+        ],
     },
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",
