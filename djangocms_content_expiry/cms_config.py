@@ -99,7 +99,7 @@ def content_expiry_site_page_content_excluded_set(queryset, request=None):
         pagecontent_set = PageContent._original_manager.exclude(page__node__site=current_site)
         pagecontent_set.select_related('page__node')
 
-        pagecontent_exclusion_list = pagecontent_set.values('pk')
+        pagecontent_exclusion_list = pagecontent_set.values_list('id', flat=True)
         set_changelist_page_content_exclusion_cache(pagecontent_exclusion_list, current_site.pk)
 
     return queryset.exclude(
