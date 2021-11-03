@@ -9,6 +9,10 @@ from django.utils.html import format_html
 from cms.app_base import CMSAppConfig, CMSAppExtension
 from cms.models import PageContent
 
+from .cache import (
+    get_changelist_page_content_exclusion_cache,
+    set_changelist_page_content_exclusion_cache,
+)
 from .constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
@@ -88,36 +92,18 @@ def content_expiry_site_page_content_excluded_set(site, queryset):
     :return: A filtered list of Content Expiry records minus any none site PageContent models
     """
     page_content_ctype = ContentType.objects.get_for_model(PageContent)
-    pagecontent_set = PageContent._original_manager.exclude(page__node__site=site)
-    pagecontent_set.select_related('page__node')
+    pagecontent_exclusion_list = get_changelist_page_content_exclusion_cache()
+
+    if not pagecontent_exclusion_list:
+        pagecontent_set = PageContent._original_manager.exclude(page__node__site=site)
+        pagecontent_set.select_related('page__node')
+
+        pagecontent_exclusion_list = pagecontent_set.values('pk')
+        set_changelist_page_content_exclusion_cache(pagecontent_exclusion_list)
 
     return queryset.exclude(
-        version__content_type=page_content_ctype, version__object_id__in=pagecontent_set
+        version__content_type=page_content_ctype, version__object_id__in=pagecontent_exclusion_list
     )
-
-
-def content_expiry_site_alias_excluded_set(site, queryset):
-
-    try:
-        # Alias = Expiry->Version->Content->Alias->site
-        from djangocms_alias.models import AliasContent
-
-        alias_queryset = AliasContent._original_manager.exclude(Q(alias__site=site) | Q(alias__site__isnull=True))
-        alias_queryset.select_related('alias')
-
-
-        alias_content_ctype = ContentType.objects.get_for_model(AliasContent)
-        site_alias_contents = get_alias_content_site_objects(site)
-        queryset = queryset.exclude(
-            version__content_type=alias_content_ctype, version__object_id__in=site_alias_contents
-        )
-    except:
-        pass
-
-    return queryset
-
-
-# Navigation = Expiry->Version->Content->Menu->site
 
 
 class ContentExpiryExtension(CMSAppExtension):
@@ -159,5 +145,4 @@ class ContentExpiryAppConfig(CMSAppConfig):
     )
     djangocms_content_expiry_changelist_queryset_filters = [
         content_expiry_site_page_content_excluded_set,
-        content_expiry_site_alias_excluded_set,
     ]
