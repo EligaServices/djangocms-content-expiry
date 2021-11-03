@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -81,24 +82,25 @@ def get_copy_content_expiry_button(obj):
     return ""
 
 
-def content_expiry_site_page_content_excluded_set(site, queryset):
+def content_expiry_site_page_content_excluded_set(queryset, request=None):
     """
     Filter ContentExpiry records to show only PageContent objects available on a given site.
     Model structure: Expiry->Version->Content->Page->Node->Site
 
-    :param site: A site object to query against
     :param queryset: A queryset object of ContentExpiry records
+    :param request: A request object if one exists
     :return: A filtered list of Content Expiry records minus any none site PageContent models
     """
+    current_site = get_current_site(request)
     page_content_ctype = ContentType.objects.get_for_model(PageContent)
-    pagecontent_exclusion_list = get_changelist_page_content_exclusion_cache()
+    pagecontent_exclusion_list = get_changelist_page_content_exclusion_cache(current_site.pk)
 
     if not pagecontent_exclusion_list:
-        pagecontent_set = PageContent._original_manager.exclude(page__node__site=site)
+        pagecontent_set = PageContent._original_manager.exclude(page__node__site=current_site)
         pagecontent_set.select_related('page__node')
 
         pagecontent_exclusion_list = pagecontent_set.values('pk')
-        set_changelist_page_content_exclusion_cache(pagecontent_exclusion_list)
+        set_changelist_page_content_exclusion_cache(pagecontent_exclusion_list, current_site.pk)
 
     return queryset.exclude(
         version__content_type=page_content_ctype, version__object_id__in=pagecontent_exclusion_list

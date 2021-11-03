@@ -1,11 +1,5 @@
-from django.dispatch import receiver
-
-from cms.models import PageContent
-
 from djangocms_versioning import constants
-from djangocms_versioning.signals import post_version_operation
 
-from djangocms_content_expiry.cache import unset_changelist_page_content_exclusion_cache
 from djangocms_content_expiry.models import ContentExpiry
 
 from .utils import get_future_expire_date
@@ -27,11 +21,3 @@ def create_content_expiry(**kwargs):
             created_by=version.created_by,
             expires=expiry_date,
         )
-
-
-@receiver(post_version_operation, sender=PageContent)
-def clear_changelist_pagecontent_exclusion_cache(*args, **kwargs):
-    """
-    Any changes to a PageContent Version requires the page exclusion cache needs to be cleared
-    """
-    unset_changelist_page_content_exclusion_cache()
