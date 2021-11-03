@@ -16,7 +16,7 @@ DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT = getattr(
     settings, "CMS_CONTENT_EXPIRY_DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT", "%Y/%m/%d %H:%M %z"
 )
 
-# Default Content Expiry changelist page content exclusion cache expiration duration is seconds
+# Default Content Expiry changelist page content exclusion cache expiration duration in seconds
 DEFAULT_CONTENT_EXPIRY_CHANGELIST_PAGECONTENT_EXCLUSION_CACHE_EXPIRY = getattr(
     settings, "CMS_DEFAULT_CONTENT_EXPIRY_CHANGELIST_PAGECONTENT_EXCLUSION_CACHE_EXPIRY", 300
 )
