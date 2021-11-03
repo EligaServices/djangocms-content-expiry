@@ -4,6 +4,7 @@ Changelog
 
 unreleased
 ==========
+* feat: Filter the Content Expiry Chnagelist PageContents Content Type by site, the feature can also be used by third parties to restrict the entries shown in the changelist.
 
 0.0.2 (2021-11-01)
 ==========
