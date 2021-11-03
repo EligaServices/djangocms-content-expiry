@@ -40,7 +40,6 @@ The Content Expiry changelist can limit the queryet based on third party require
 .. code-block:: python
 
     # some_app/cms_config.py
-    from collections import OrderedDict
     from cms.app_base import CMSAppConfig
 
 
