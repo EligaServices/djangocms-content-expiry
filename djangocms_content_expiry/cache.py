@@ -1,7 +1,11 @@
 from django.core.cache import cache
 
-from djangocms_content_expiry.conf import DEFAULT_CONTENT_EXPIRY_CHANGELIST_PAGECONTENT_EXCLUSION_CACHE_EXPIRY
-from djangocms_content_expiry.constants import CONTENT_EXPIRY_CHANGELIST_PAGECONTENT_EXCLUSION_CACHE_KEY
+from djangocms_content_expiry.conf import (
+    DEFAULT_CONTENT_EXPIRY_CHANGELIST_PAGECONTENT_EXCLUSION_CACHE_EXPIRY,
+)
+from djangocms_content_expiry.constants import (
+    CONTENT_EXPIRY_CHANGELIST_PAGECONTENT_EXCLUSION_CACHE_KEY,
+)
 
 
 def set_changelist_page_content_exclusion_cache(value):

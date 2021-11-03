@@ -7,7 +7,10 @@ from django.test import RequestFactory, TestCase
 from djangocms_moderation.cms_config import ModerationExtension
 from djangocms_moderation.models import ModerationRequestTreeNode
 
-from djangocms_content_expiry.cms_config import ContentExpiryAppConfig, ContentExpiryExtension
+from djangocms_content_expiry.cms_config import (
+    ContentExpiryAppConfig,
+    ContentExpiryExtension,
+)
 from djangocms_content_expiry.constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 

@@ -6,7 +6,6 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
-
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -48,6 +47,8 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
+        # Execute any filters that needs to be added before any of the admin filters
+        # are executed
         current_site = get_current_site(request)
         app_config = apps.get_app_config("djangocms_content_expiry")
         for content_model_filter in app_config.cms_extension.expiry_changelist_queryset_filters:
