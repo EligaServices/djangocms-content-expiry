@@ -20,7 +20,7 @@ from .constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 try:
     from djangocms_alias.models import AliasContent
     djangocms_alias_enabled = True
-except (ImportError):
+except ImportError:
     djangocms_alias_enabled = False
 
 
