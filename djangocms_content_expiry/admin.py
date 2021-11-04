@@ -46,7 +46,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
-        # Execute any filters that needs to be added before any of the admin filters
+        # Execute any filters that need to be added before any of the admin filters
         # are executed
         app_config = apps.get_app_config("djangocms_content_expiry")
         for content_model_filter in app_config.cms_extension.expiry_changelist_queryset_filters:
