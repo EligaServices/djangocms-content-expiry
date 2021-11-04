@@ -1,6 +1,7 @@
 HELPER_SETTINGS = {
     "TIME_ZONE": "America/Chicago",
     "INSTALLED_APPS": [
+        "djangocms_alias",
         "djangocms_content_expiry",
         "djangocms_content_expiry.test_utils.polls",
         "djangocms_versioning",
@@ -11,6 +12,7 @@ HELPER_SETTINGS = {
         "auth": None,
         "cms": None,
         "menus": None,
+        "djangocms_alias": None,
         "djangocms_versioning": None,
         "djangocms_moderation": None,
         "djangocms_content_expiry": None,
