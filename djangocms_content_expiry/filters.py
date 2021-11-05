@@ -63,13 +63,6 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             if expiry_record.version.content_type.pk not in content_types:
                 excludes.append(expiry_record.pk)
 
-    # def get_changelist(self, request, **kwargs):
-    #     """
-    #     Return the ChangeList class for use on the changelist page.
-    #     """
-    #     from .views import ContentExpiryChangeList
-    #     return ContentExpiryChangeList
-
     def queryset(self, request, queryset):
         content_types = self.value()
         if not content_types:
@@ -81,19 +74,19 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             content_type_model = content_type_obj.model_class()
 
             if hasattr(content_type_model, "polymorphic_ctype"):
-                # TODO: Use versioning utility for this:
-                # related_query_name = f"{content_type_model._meta.app_label}_{content_type_model._meta.model_name}"
                 # Ideally we would reverse query like so, this is sadly not possible due to limitations
                 # in django polymorphic. The reverse capability is removed by adding + to the ctype foreign key :-(
                 # If polymorphic ever includes a reverse query capability this is all that is eeded
+                # related_query_name = f"{content_type_model._meta.app_label}_{content_type_model._meta.model_name}"
                 # filters.append(Q(**{
                 #     f"version__{related_query_name}__polymorphic_ctype": content_type_obj,
                 # }))
 
-                # Get all objects for the top level
+                # Get all objects for the base model and then filter by the polymorphic content type
                 content_type_inclusion_list = []
                 base_content_model = get_base_polymorphic_model(content_type_model)
                 base_content_type = ContentType.objects.get_for_model(base_content_model)
+
                 for expiry_record in queryset.filter(version__content_type=base_content_type):
                     content = expiry_record.version.content
                     # If the model has
@@ -104,11 +97,6 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             else:
                 filters.append(Q(version__content_type=content_type_obj))
 
-        """
-        queryset[3].version.content.polymorphic_ctype == content_type_obj
-
-        queryset.filter(version__polymorphic_project_artprojectcontent__polymorphic_ctype=content_type_obj)
-        """
         return queryset.filter(reduce(lambda x, y: x | y, filters))
 
     def choices(self, changelist):
