@@ -73,6 +73,7 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             content_type_obj = ContentType.objects.get_for_id(content_type)
             content_type_model = content_type_obj.model_class()
 
+            # Handle any complex polymorphic models
             if hasattr(content_type_model, "polymorphic_ctype"):
                 # Ideally we would reverse query like so, this is sadly not possible due to limitations
                 # in django polymorphic. The reverse capability is removed by adding + to the ctype foreign key :-(
@@ -94,6 +95,7 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
                         content_type_inclusion_list.append(expiry_record.id)
 
                 filters.append(Q(id__in=content_type_inclusion_list))
+            # For simple models simply filter by the content type
             else:
                 filters.append(Q(version__content_type=content_type_obj))
 
