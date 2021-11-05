@@ -1,6 +1,7 @@
 HELPER_SETTINGS = {
     "TIME_ZONE": "America/Chicago",
     "INSTALLED_APPS": [
+        "djangocms_alias",
         'polymorphic',
         "djangocms_content_expiry",
         "djangocms_content_expiry.test_utils.polls",
@@ -13,6 +14,7 @@ HELPER_SETTINGS = {
         "auth": None,
         "cms": None,
         "menus": None,
+        "djangocms_alias": None,
         "djangocms_versioning": None,
         "djangocms_moderation": None,
         "djangocms_content_expiry": None,
@@ -26,7 +28,12 @@ HELPER_SETTINGS = {
     ),
     "CMS_LANGUAGES": {
         1: [
-            {"code": "en", "name": "English", "fallbacks": ["de", "fr"]},
+            {
+                "code": "en",
+                "name":
+                "English",
+                "fallbacks": ["de", "fr"],
+            },
             {
                 "code": "de",
                 "name": "Deutsche",
@@ -42,7 +49,20 @@ HELPER_SETTINGS = {
                 "name": "Italiano",
                 "fallbacks": ["fr"],  # FOR TESTING, LEAVE AS ONLY 'fr'
             },
-        ]
+        ],
+        2: [
+            {
+                "code": "en",
+                "name":
+                "English",
+                "fallbacks": ["it"],
+            },
+            {
+                "code": "it",
+                "name": "Italiano",
+                "fallbacks": [],
+            },
+        ],
     },
     "PARLER_ENABLE_CACHING": False,
     "LANGUAGE_CODE": "en",

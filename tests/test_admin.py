@@ -1,16 +1,20 @@
 import datetime
-from unittest.mock import patch
 
-from django.apps import apps
 from django.contrib import admin
-from django.test import RequestFactory
+from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
+from django.test import override_settings
+from django.utils import timezone
 
+from cms.api import create_page
+from cms.models import PageContent
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
-from freezegun import freeze_time
+from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
+from djangocms_content_expiry.conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
+from djangocms_content_expiry.models import ContentExpiry
 from djangocms_content_expiry.filters import ContentTypeFilter
 from djangocms_content_expiry.forms import ForeignKeyReadOnlyWidget
 from djangocms_content_expiry.models import (
@@ -91,6 +95,10 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
 
 
 class ContentExpiryChangelistTestCase(CMSTestCase):
+    def setUp(self):
+        self.site = admin.AdminSite()
+        self.site.register(ContentExpiry, ContentExpiryAdmin)
+
     def test_change_fields(self):
         """
         Ensure the change list presents list display items from the admin file
@@ -107,178 +115,12 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         self.assertTrue('version_state' in context)
         self.assertTrue('version_author' in context)
 
+        # Get any computed fields such as the bespoke actions
+        list_functions = [field.short_description for field in context if hasattr(field, 'short_description')]
 
-class ContentExpiryChangelistExpiryFilterTestCase(CMSTestCase):
-    @freeze_time("2200-01-14")
-    @patch('djangocms_content_expiry.helpers.DEFAULT_RANGEFILTER_DELTA', 15)
-    def test_expired_filter_default_setting(self):
-        """
-        Default filter is to display all published content on page load
-        """
-        from_date = datetime.datetime.now()
+        self.assertTrue('actions' in list_functions)
 
-        # Record that is expired by 1 day
-        delta_1 = datetime.timedelta(days=1)
-        expire_at_1 = from_date + delta_1
-        PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
-
-        # Record that is set to expire today
-        expire_at_2 = from_date
-        poll_content_2 = PollContentExpiryFactory(expires=expire_at_2, version__state=PUBLISHED)
-
-        # Record that is set to expire tomorrow
-        delta_3 = datetime.timedelta(days=1)
-        expire_at_3 = from_date - delta_3
-        poll_content_3 = PollContentExpiryFactory(expires=expire_at_3, version__state=PUBLISHED)
-
-        # Record that is set to expire in 1 day before the end date
-        delta_4 = datetime.timedelta(days=14)
-        expire_at_4 = from_date - delta_4
-        poll_content_4 = PollContentExpiryFactory(expires=expire_at_4, version__state=PUBLISHED)
-
-        # Record that is set to expire the same day as the end date
-        delta_5 = datetime.timedelta(days=15)
-        expire_at_5 = from_date - delta_5
-        poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
-
-        # Record that is set to expire a day after the end date
-        delta_6 = datetime.timedelta(days=16)
-        expire_at_6 = from_date - delta_6
-        PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
-
-        with self.login_user_context(self.get_superuser()):
-            admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-            response = self.client.get(admin_endpoint)
-
-        # Only contents in the date range should be returned
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [poll_content_2.version.pk,
-             poll_content_3.version.pk,
-             poll_content_4.version.pk,
-             poll_content_5.version.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    @freeze_time("2200-01-14")
-    @patch('djangocms_content_expiry.helpers.DEFAULT_RANGEFILTER_DELTA', 15)
-    def test_expired_filter_setting_expired_at_range_boundaries(self):
-        """
-        The boundaries of the Expired by date range filter are
-        set to check that only records due to expire are shown with a filter value set at a
-        different range to the setting DEFAULT_RANGEFILTER_DELTA. The reason the dates
-        need to differ ensure that we not just re-testing the default setting.
-        """
-        from_date = datetime.datetime.now()
-        to_date = from_date - datetime.timedelta(days=110)
-
-        # Record that is expired by 1 day
-        delta_1 = datetime.timedelta(days=1)
-        expire_at_1 = from_date + delta_1
-        PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
-
-        # Record that is set to expire today
-        expire_at_2 = from_date
-        poll_content_2 = PollContentExpiryFactory(expires=expire_at_2, version__state=PUBLISHED)
-
-        # Record that is set to expire tomorrow
-        delta_3 = datetime.timedelta(days=1)
-        expire_at_3 = from_date - delta_3
-        poll_content_3 = PollContentExpiryFactory(expires=expire_at_3, version__state=PUBLISHED)
-
-        # Record that is set to expire in 1 day before the end date
-        delta_4 = datetime.timedelta(days=109)
-        expire_at_4 = from_date - delta_4
-        poll_content_4 = PollContentExpiryFactory(expires=expire_at_4, version__state=PUBLISHED)
-
-        # Record that is set to expire the same day as the end date
-        delta_5 = datetime.timedelta(days=110)
-        expire_at_5 = from_date - delta_5
-        poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
-
-        # Record that is set to expire a day after the end date
-        delta_6 = datetime.timedelta(days=111)
-        expire_at_6 = from_date - delta_6
-        PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
-
-        with self.login_user_context(self.get_superuser()):
-            url_date_range = f"?expires__range__gte={to_date.date()}&expires__range__lte={from_date.date()}"
-            admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-            response = self.client.get(admin_endpoint + url_date_range)
-
-        # Only contents in the date range should be returned
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [poll_content_2.version.pk,
-             poll_content_3.version.pk,
-             poll_content_4.version.pk,
-             poll_content_5.version.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_expired_filter_published_always_filtered(self):
-        """
-        All published items should never be shown to the user as they have been expired and acted on
-        """
-        delta = datetime.timedelta(days=31)
-        expire = datetime.datetime.now() + delta
-        PollContentExpiryFactory(expires=expire, version__state=PUBLISHED)
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.get_admin_url(ContentExpiry, "changelist"))
-
-        published_query_set = response.context["cl"].queryset.filter(version__state="published")
-
-        self.assertEqual(len(published_query_set), 0)
-
-
-class ContentExpiryAuthorFilterTestCase(CMSTestCase):
-    def test_author_filter(self):
-        """
-        Author filter should only show selected author's results
-        """
-        date = datetime.datetime.now() - datetime.timedelta(days=5)
-        # Create records with a set user
-        user = UserFactory()
-        expiry_author = PollContentExpiryFactory.create_batch(2, expires=date, created_by=user,
-                                                              version__state=PUBLISHED)
-
-        # Create records with other random users
-        expiry_other_authors = PollContentExpiryFactory.create_batch(4, expires=date, version__state=PUBLISHED)
-
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-        # url_all = f"?state=_all_"
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint)
-
-        # The results should not be filtered
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_author[0].pk, expiry_author[1].pk,
-             expiry_other_authors[0].pk, expiry_other_authors[1].pk,
-             expiry_other_authors[2].pk, expiry_other_authors[3].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        # Filter by a user
-        author_selection = f"?created_by={user.pk}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + author_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_author[0].pk, expiry_author[1].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-
+    def test_preview_link_published_object(self):
 class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
     def setUp(self):
@@ -312,8 +154,10 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
     def test_content_type_filter_for_simple_models(self):
         """
-        Content type filter should only show relevant content type when filter is selected
+        For published objects the live link should be returned
         """
+        content_expiry = PollContentExpiryFactory(version__state=PUBLISHED)
+        poll_content = content_expiry.version.content
         content_type = f"?content_type={self.poll_expiry_c_type}&state={DRAFT}"
         admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
@@ -392,6 +236,9 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(admin_endpoint + content_type)
 
+        self.assertEqual(
+            self.site._registry[ContentExpiry]._get_preview_url(content_expiry),
+            poll_content.get_absolute_url()
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
             [
@@ -404,6 +251,7 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
             ordered=False,
         )
 
+    def test_preview_link_draft_object(self):
     def test_content_type_filter_performance_for_concrete_polymorphic_models(self):
         """
         """
@@ -441,334 +289,32 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 class ContentExpiryChangelistVersionFilterTestCase(CMSTestCase):
     def test_versions_filters_default(self):
         """
-        The default should be to show published versions by default as they are what
-        should be expired, we provide the ability to filter the list to find existing entries
-        or else there would be no other way to find them.
+        For draft / editable objects the preview link should be returned
         """
-        date = datetime.datetime.now() - datetime.timedelta(days=5)
-        # Create draft records
-        PollContentExpiryFactory.create_batch(2, expires=date, version__state=DRAFT)
-        # Create published records
-        expiry_published_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=PUBLISHED)
-        # Create archived records
-        PollContentExpiryFactory.create_batch(2, expires=date, version__state=ARCHIVED)
-        # Create unublished records
-        PollContentExpiryFactory.create_batch(2, expires=date, version__state=UNPUBLISHED)
+        content_expiry = PollContentExpiryFactory(version__state=DRAFT)
+        poll_content = content_expiry.version.content
 
-        # By default only published entries should exist as that is the default setting
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_published_list[0].pk, expiry_published_list[1].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
+        self.assertEqual(
+            self.site._registry[ContentExpiry]._get_preview_url(content_expiry),
+            poll_content.get_preview_url()
         )
-
-    def test_versions_filters_changing_states(self):
-        """
-        Filter options can be selected and changed, the expiry records shown should match the
-        options selected.
-        """
-        date = datetime.datetime.now() - datetime.timedelta(days=5)
-        # Create draft records
-        expiry_draft_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=DRAFT)
-        # Create published records
-        expiry_published_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=PUBLISHED)
-        # Create archived records
-        expiry_archived_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=ARCHIVED)
-        # Create unublished records
-        expiry_unpublished_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=UNPUBLISHED)
-
-        # When draft is selected only the draft entries should be shown
-        version_selection = f"?state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_draft_list[0].pk, expiry_draft_list[1].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        # When published is selected only the draft entries should be shown
-        version_selection = f"?state={PUBLISHED}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_published_list[0].pk, expiry_published_list[1].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        # When archived is selected only the draft entries should be shown
-        version_selection = f"?state={ARCHIVED}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_archived_list[0].pk, expiry_archived_list[1].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        # When unpublished is selected only the draft entries should be shown
-        version_selection = f"?state={UNPUBLISHED}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_unpublished_list[0].pk, expiry_unpublished_list[1].pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_versions_filters_multiple_states_selected(self):
-        """
-        Multiple filters can be selected at once, changing and adding filters
-        should show the expiry records based on the multiple options selected
-        """
-        date = datetime.datetime.now() - datetime.timedelta(days=5)
-        # Create draft records
-        expiry_draft_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=DRAFT)
-        # Create published records
-        expiry_published_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=PUBLISHED)
-        # Create archived records
-        expiry_archived_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=ARCHIVED)
-        # Create unublished records
-        expiry_unpublished_list = PollContentExpiryFactory.create_batch(2, expires=date, version__state=UNPUBLISHED)
-
-        # Simulate selecting some of the filters
-        version_selection = f"?state={ARCHIVED},{UNPUBLISHED}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_archived_list[0].pk, expiry_archived_list[1].pk,
-             expiry_unpublished_list[0].pk, expiry_unpublished_list[1].pk, ],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        # Simulate selecting all of the filters
-        version_selection = f"?state={DRAFT},{PUBLISHED},{ARCHIVED},{UNPUBLISHED}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        # When an author is selected in the filter only the author selected content expiry are shown
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_draft_list[0].pk, expiry_draft_list[1].pk,
-             expiry_published_list[0].pk, expiry_published_list[1].pk,
-             expiry_archived_list[0].pk, expiry_archived_list[1].pk,
-             expiry_unpublished_list[0].pk, expiry_unpublished_list[1].pk, ],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_versions_filters_all_state(self):
-        """
-        When selecting the All filter option all of the expiry records should be shown,
-        selecting another option should remove the all selection.
-        """
-        date = datetime.datetime.now() - datetime.timedelta(days=5)
-        expiry_draft = PollContentExpiryFactory(expires=date, version__state=DRAFT)
-        expiry_published = PollContentExpiryFactory(expires=date, version__state=PUBLISHED)
-        expiry_archived = PollContentExpiryFactory(expires=date, version__state=ARCHIVED)
-        expiry_unpublished = PollContentExpiryFactory(expires=date, version__state=UNPUBLISHED)
-
-        # When draft is selected only the draft entries should be shown
-        version_selection = "?state=_all_"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_draft.pk, expiry_published.pk,
-             expiry_archived.pk, expiry_unpublished.pk, ],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-        # selecting another filter should remove the all option
-        version_selection = f"?state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + version_selection)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [expiry_draft.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-
-class ContentExpiryCsvExportFilterSettingsTestCase(CMSTestCase):
-    def setUp(self):
-        self.date = datetime.datetime.now() - datetime.timedelta(days=5)
-        self.admin_endpoint = self.get_admin_url(ContentExpiry, "export_csv")
-
-    def test_version_filter_boundaries_in_export(self):
-        """
-        Export respects applied version filters.
-        CSV data should only export matching versioned state results
-        """
-        # Create content expiry records for draft and published
-        PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
-        PollContentExpiryFactory(expires=self.date, version__state=PUBLISHED)
-
-        # When draft is selected only the draft entries should be shown
-        version_selection = f"?state={DRAFT}"
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + version_selection)
-
-        response_content = response.content.decode()
-
-        # Endpoint is returning 200 status code
-        self.assertEqual(response.status_code, 200)
-        # Only draft content should be exported as the set filter should be respected
-        self.assertIn("Draft", response_content)
-        # Published content should not be available in exported data if the filter is set to display draft only
-        self.assertNotIn('Published', response_content)
-
-    def test_author_filter_boundaries_in_export(self):
-        """
-        Export respects applied author filters.
-        CSV data should only export selected author's results
-        """
-        version_1 = PollContentExpiryFactory(expires=self.date, version__state=PUBLISHED)
-        user_1 = version_1.version.created_by
-        version_2 = PollContentExpiryFactory(expires=self.date, version__state=PUBLISHED)
-        user_2 = version_2.version.created_by
-
-        # Filter by a user_1
-        author_selection = f"?created_by={version_1.pk}"
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + author_selection)
-
-        response_content = response.content.decode()
-        # Endpoint is returning 200 status code
-        self.assertEqual(response.status_code, 200)
-        # User 1 is in response
-        self.assertIn(user_1.username, response_content)
-        # User 2 should not be in the response
-        self.assertNotIn(user_2.username, response_content)
-
-    def test_content_type_filter_boundaries_in_export(self):
-        """
-        Export respects applied content type filters.
-        CSV data should only export content matching selected content type's results
-        """
-        content_expiry = PollContentExpiryFactory(expires=self.date, version__state=PUBLISHED)
-        version = content_expiry.version
-
-        # Testing page content filter with polls content
-        content_type = f"?content_type={version.content_type.pk}"
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + content_type)
-
-        response_content = response.content.decode()
-        # Endpoint is returning 200 status code
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('poll content', response_content)
-
-    @freeze_time("2200-01-14")
-    @patch('djangocms_content_expiry.helpers.DEFAULT_RANGEFILTER_DELTA', 15)
-    def test_date_range_filter_boundaries_in_export(self):
-        """
-        The boundaries of the expired by date range filter are
-        set to check that only records due to expire are exported
-        """
-        from_date = datetime.datetime.now()
-        to_date = from_date - datetime.timedelta(days=110)
-
-        # Record that is expired by 1 day
-        delta_1 = datetime.timedelta(days=1)
-        expire_at_1 = from_date + delta_1
-        poll_content_1 = PollContentExpiryFactory(expires=expire_at_1, version__state=PUBLISHED)
-
-        # Record that is set to expire today
-        expire_at_2 = from_date
-        poll_content_2 = PollContentExpiryFactory(expires=expire_at_2, version__state=PUBLISHED)
-
-        # Record that is set to expire tomorrow
-        delta_3 = datetime.timedelta(days=1)
-        expire_at_3 = from_date - delta_3
-        poll_content_3 = PollContentExpiryFactory(expires=expire_at_3, version__state=PUBLISHED)
-
-        # Record that is set to expire in 1 day before the end date
-        delta_4 = datetime.timedelta(days=109)
-        expire_at_4 = from_date - delta_4
-        poll_content_4 = PollContentExpiryFactory(expires=expire_at_4, version__state=PUBLISHED)
-
-        # Record that is set to expire the same day as the end date
-        delta_5 = datetime.timedelta(days=110)
-        expire_at_5 = from_date - delta_5
-        poll_content_5 = PollContentExpiryFactory(expires=expire_at_5, version__state=PUBLISHED)
-
-        # Record that is set to expire a day after the end date
-        delta_6 = datetime.timedelta(days=111)
-        expire_at_6 = from_date - delta_6
-        poll_content_6 = PollContentExpiryFactory(expires=expire_at_6, version__state=PUBLISHED)
-
-        with self.login_user_context(self.get_superuser()):
-            url_date_range = f"?expires__range__gte={to_date.date()}&expires__range__lte={from_date.date()}"
-            # admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-            response = self.client.get(self.admin_endpoint + url_date_range)
-
-        response_content = response.content.decode()
-
-        # Endpoint is returning 200 status code
-        self.assertEqual(response.status_code, 200)
-        # Content is already expired and should not be included in the export
-        self.assertNotIn(poll_content_1.version.content.text, response_content)
-        # Content which matches the date range should be exported
-        self.assertIn(poll_content_2.version.content.text, response_content)
-        self.assertIn(poll_content_3.version.content.text, response_content)
-        self.assertIn(poll_content_4.version.content.text, response_content)
-        self.assertIn(poll_content_5.version.content.text, response_content)
-        # Content that is set to expire a day after the end date should not be exported
-        self.assertNotIn(poll_content_6.version.content.text, response_content)
 
 
 class ContentExpiryCsvExportFileTestCase(CMSTestCase):
     def setUp(self):
-        self.date = datetime.datetime.now() - datetime.timedelta(days=5)
-        self.admin_endpoint = self.get_admin_url(ContentExpiry, "export_csv")
+        # Use a timezone aware time due to the admin using a timezone
+        # which causes a datetime mismatch for the CSV view
+        self.date = timezone.now() + datetime.timedelta(days=5)
+        # CSV Headings: 0 -> Title, 1 -> Content Type, 2 -> Expiry Date, 3 -> Version State, 4 -> Author, 5 -> Url
+        self.headings_map = {
+            "title": 0,
+            "ctype": 1,
+            "expiry_date": 2,
+            "version_state": 3,
+            "version_author": 4,
+            "url": 5,
+        }
+        self.export_admin_endpoint = self.get_admin_url(ContentExpiry, "export_csv") + "?state=_all_"
 
     def test_export_button_endpoint_response_is_a_csv(self):
         """
@@ -776,10 +322,8 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         """
         PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
 
-        version_selection = "?state=_all_"
-
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + version_selection)
+            response = self.client.get(self.export_admin_endpoint)
 
         # Endpoint is returning 200 status code
         self.assertEqual(response.status_code, 200)
@@ -793,46 +337,88 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         """
         Export should contain all the headings in the current content expiry list display
         """
-        content_expiry = PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
-
-        version_admin = admin.site._registry[type(content_expiry)]
-        request = RequestFactory().get("/")
-
-        list_display = version_admin.get_list_display(request)
-
-        version_selection = "?state=_all_"
+        PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + version_selection)
+            response = self.client.get(self.export_admin_endpoint)
 
-        response_content = response.content.decode()
-        # Endpoint is returning 200 status code
+        csv_headings = response.content.decode().splitlines()[0].split(",")
+
         self.assertEqual(response.status_code, 200)
-        # Response contains headings in the list display
-        for heading in list_display:
-            if heading == "expires":
-                heading = "Expiry Date"
-            heading = heading.title().replace("_", " ")
-            self.assertIn(heading, response_content)
+
+        self.assertEqual(
+            csv_headings[self.headings_map["title"]],
+            "Title"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["ctype"]],
+            "Content Type"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["expiry_date"]],
+            "Expiry Date"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["version_state"]],
+            "Version State"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["version_author"]],
+            "Version Author"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["url"]],
+            "Url"
+        )
 
     def test_file_content_contains_values(self):
         """
-        CSV response should contain expected values
+        CSV response should contain expected values.
+
+        The dates stored for expiry date are stored with the servers timezone attached, the export
+        is exported as UTC so the date time will be converted hence the need to use a timezone aware
+        datetime expiry date object.
         """
         content_expiry = PollContentExpiryFactory(expires=self.date, version__state=DRAFT)
-
-        version_selection = "?state=_all_"
+        preview_url = content_expiry.version.content.get_preview_url()
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(self.admin_endpoint + version_selection)
+            response = self.client.get(self.export_admin_endpoint)
 
-        response_content = response.content.decode()
-        # Endpoint is returning 200 status code
         self.assertEqual(response.status_code, 200)
-        # Content type (poll content) should be in the csv response
-        self.assertIn(content_expiry.version.content_type.name, response_content)
-        # Another spot check to ensure version state is in the csv response
-        self.assertIn("Draft", response_content)
+
+        csv_lines = response.content.decode().splitlines()
+        content_row_1 = csv_lines[1].split(",")
+
+        # The following contents should be present
+        self.assertEqual(
+            content_row_1[self.headings_map["title"]],
+            content_expiry.version.content.text
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["ctype"]],
+            content_expiry.version.content_type.name
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["expiry_date"]],
+            content_expiry.expires.strftime(DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT)
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["version_state"]],
+            "Draft"
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["version_author"]],
+            content_expiry.version.created_by.username
+        )
+        self.assertNotEqual(
+            content_row_1[self.headings_map["url"]],
+            preview_url
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["url"]],
+            response.wsgi_request.build_absolute_uri(preview_url)
+        )
 
     def test_export_button_is_visible(self):
         """
@@ -850,41 +436,86 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         )
 
 
-class DefaultContentExpiryConfigurationAdminViewsPermissionsTestCase(CMSTestCase):
+class ContentExpiryChangelistPageContentSiteTestCase(CMSTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # Site 1
+        cls.site_1 = Site.objects.get(id=1)
+        # Site 2
+        cls.site_2 = Site(id=2, domain='example-2.com', name='example-2.com')
+        cls.site_2.save()
 
     def setUp(self):
-        self.model = DefaultContentExpiryConfiguration
-        self.content_expiry_configuration = DefaultContentExpiryConfigurationFactory()
+        Site.objects.clear_cache()
+        # Record that is expired by 1 day
+        from_date = datetime.datetime.now()
+        expire_at = from_date + datetime.timedelta(days=10)
+        language = "en"
 
-    def test_add_permissions(self):
+        self.superuser = self.get_superuser()
+        # Create contents on site 1
+        page_1 = create_page(
+            title="Site 1 page",
+            template="page.html",
+            language=language,
+            created_by=self.superuser,
+            site=self.site_1
+        )
+        # Publish the site 1 page content
+        pagecontent_1 = PageContent._base_manager.filter(page=page_1, language=language).first()
+        self.page_1_version = pagecontent_1.versions.first()
+        self.page_1_version.publish(self.superuser)
+
+        # Set the expiry date closer than the default
+        self.page_1_version.contentexpiry.expires = expire_at
+        self.page_1_version.contentexpiry.save()
+
+        # Create contents on site 2
+        page_2 = create_page(
+            title="Site 2 page",
+            template="page.html",
+            language=language,
+            created_by=self.superuser,
+            site=self.site_2
+        )
+        # Publish the site 2 page content
+        pagecontent_2 = PageContent._base_manager.filter(page=page_2, language=language).first()
+        self.page_2_version = pagecontent_2.versions.first()
+        self.page_2_version.publish(self.superuser)
+
+        # Set the expiry date closer than the default
+        self.page_2_version.contentexpiry.expires = expire_at
+        self.page_2_version.contentexpiry.save()
+
+    def tearDown(self):
+        Site.objects.clear_cache()
+
+    def test_pages_filtered_by_default_site(self):
         """
-        Adding a default content expiry configuration record via the admin is permitted
+        The list of change objects must be filtered by the default / current site
         """
-        endpoint = self.get_admin_url(self.model, "add")
+        endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
 
-        self.assertEqual(response.status_code, 200)
+        queryset_result = response.context_data['cl'].result_list
 
-    def test_change_permissions(self):
+        # Sanity check that the correct site 1 is used
+        self.assertEqual(get_current_site(response.request), self.site_1)
+        self.assertTrue(len(queryset_result), 1)
+        self.assertTrue(queryset_result.first().pk, self.page_1_version.contentexpiry.pk)
+
+    @override_settings(SITE_ID=2)
+    def test_pages_filtered_by_other_site(self):
         """
-        Changing a default content expiry configuration record via the admin is permitted
+        The list of change objects must be filtered by a different site
         """
-        endpoint = self.get_admin_url(self.model, "change",  self.content_expiry_configuration.pk)
+        endpoint = self.get_admin_url(ContentExpiry, "changelist")
 
         with self.login_user_context(self.get_superuser()):
-            response = self.client.get(endpoint, follow=True)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_delete_permissions(self):
-        """
-        Deleting a default content expiry configuration record via the admin is permitted
-        """
-        endpoint = self.get_admin_url(self.model, "delete",  self.content_expiry_configuration.pk)
-
-        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
             response = self.client.get(endpoint, follow=True)
 
         self.assertEqual(response.status_code, 200)
@@ -931,41 +562,9 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
             for item in versionable.content_types
         ))
 
-        # We have to delete the reserved entry because it now exists!
-        content_type_list.remove(poll_content_expiry.version.content_type.id)
+        queryset_result = response.context_data['cl'].result_list
 
-        self.assertCountEqual(
-            field_content_type.choices.queryset.values_list('id', flat=True),
-            content_type_list,
-        )
-
-    def test_add_form_content_type_submission_not_set(self):
-        """
-        The Content Type list should still show the content type list if
-        the user submitted the form and the content type option was not selected
-        """
-        poll_content_expiry = PollContentExpiryFactory()
-        default_expiry_configuration = DefaultContentExpiryConfigurationFactory(
-            content_type=poll_content_expiry.version.content_type
-        )
-        preload_form_data = {
-            "id": default_expiry_configuration.pk,
-            "duration": default_expiry_configuration.duration,
-        }
-        form = admin.site._registry[DefaultContentExpiryConfiguration].form(preload_form_data)
-        field_content_type = form.fields['content_type']
-
-        self.assertNotEqual(field_content_type.widget.__class__, ForeignKeyReadOnlyWidget)
-
-    def test_change_form_content_type_items(self):
-        """
-        The Content Type control should be read only and not allow the user to change it
-        """
-        poll_content_expiry = PollContentExpiryFactory()
-        default_expiry_configuration = DefaultContentExpiryConfigurationFactory(
-            content_type=poll_content_expiry.version.content_type
-        )
-        form = admin.site._registry[DefaultContentExpiryConfiguration].form(instance=default_expiry_configuration)
-        field_content_type = form.fields['content_type']
-
-        self.assertEqual(field_content_type.widget.__class__, ForeignKeyReadOnlyWidget)
+        # Sanity check that the correct site 2 is used
+        self.assertEqual(get_current_site(response.request), self.site_2)
+        self.assertTrue(len(queryset_result), 1)
+        self.assertTrue(queryset_result.first().pk, self.page_2_version.contentexpiry.pk)
