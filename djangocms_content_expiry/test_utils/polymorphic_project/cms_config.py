@@ -10,7 +10,7 @@ from djangocms_versioning.datastructures import (
 from .models import ArtProjectContent, ProjectContent, ResearchProjectContent
 
 
-def versioning_filer_models_config():
+def versioning_project_models_config():
     file_config = PolymorphicVersionableItem(
         content_model=ProjectContent,
         grouper_field_name='grouper',
@@ -29,4 +29,4 @@ def versioning_filer_models_config():
 
 class PolymorphicCMSConfig(CMSAppConfig):
     djangocms_versioning_enabled = True
-    versioning = list(versioning_filer_models_config())
+    versioning = list(versioning_project_models_config())

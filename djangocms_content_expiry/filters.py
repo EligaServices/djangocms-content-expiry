@@ -1,11 +1,14 @@
+from functools import reduce
+
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Prefetch
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
+from polymorphic.utils import get_base_polymorphic_model
 from rangefilter.filters import DateRangeFilter
 
 from .helpers import get_rangefilter_expires_default
@@ -72,15 +75,41 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
         if not content_types:
             return queryset
 
+        filters = []
         for content_type in content_types.split(','):
             content_type_obj = ContentType.objects.get_for_id(content_type)
             content_type_model = content_type_obj.model_class()
 
             if hasattr(content_type_model, "polymorphic_ctype"):
-                # Q(version__versioningreverse__polymorphic_ctype=content_type_model)
-                pass
+                # TODO: Use versioning utility for this:
+                # related_query_name = f"{content_type_model._meta.app_label}_{content_type_model._meta.model_name}"
+                # Ideally we would reverse query like so, this is sadly not possible due to limitations
+                # in django polymorphic. The reverse capability is removed by adding + to the ctype foreign key :-(
+                # If polymorphic ever includes a reverse query capability this is all that is eeded
+                # filters.append(Q(**{
+                #     f"version__{related_query_name}__polymorphic_ctype": content_type_obj,
+                # }))
 
-        return queryset.filter(version__content_type__in=content_type.split(','))
+                # Get all objects for the top level
+                content_type_inclusion_list = []
+                base_content_model = get_base_polymorphic_model(content_type_model)
+                base_content_type = ContentType.objects.get_for_model(base_content_model)
+                for expiry_record in queryset.filter(version__content_type=base_content_type):
+                    content = expiry_record.version.content
+                    # If the model has
+                    if content.polymorphic_ctype_id == content_type_obj.pk:
+                        content_type_inclusion_list.append(expiry_record.id)
+
+                filters.append(Q(id__in=content_type_inclusion_list))
+            else:
+                filters.append(Q(version__content_type=content_type_obj))
+
+        """
+        queryset[3].version.content.polymorphic_ctype == content_type_obj
+
+        queryset.filter(version__polymorphic_project_artprojectcontent__polymorphic_ctype=content_type_obj)
+        """
+        return queryset.filter(reduce(lambda x, y: x | y, filters))
 
     def choices(self, changelist):
         yield {

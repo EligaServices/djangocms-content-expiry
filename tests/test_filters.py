@@ -201,7 +201,7 @@ class ContentExpiryAuthorFilterTestCase(CMSTestCase):
 class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
     def setUp(self):
-        self.expiry_date = datetime.datetime.now() - datetime.timedelta(days=5)
+        self.expiry_date = datetime.datetime.now() + datetime.timedelta(days=5)
         self.poll_expiry = PollContentExpiryFactory(expires=self.expiry_date)
         self.poll_expiry_c_type = self.poll_expiry.version.content_type.pk
         self.project_expiry_set = ProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
@@ -316,30 +316,6 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
                 self.art_expiry_set[0].version.pk,
                 self.art_expiry_set[1].version.pk,
              ],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_content_type_filter(self):
-        """
-        Content type filter should only show relevant content type when filter is selected
-        """
-        date = datetime.datetime.now() + datetime.timedelta(days=5)
-
-        poll_content_expiry = PollContentExpiryFactory(expires=date)
-        version = poll_content_expiry.version
-
-        # Testing page content filter with polls content
-        content_type = f"?content_type={version.content_type.pk}&state={DRAFT}"
-
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + content_type)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [version.pk],
             transform=lambda x: x.pk,
             ordered=False,
         )
@@ -723,8 +699,10 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
         versioning_config = apps.get_app_config("djangocms_versioning")
 
         # The list is equal to the content type versionables
-        content_type_list = [item for versionable in versioning_config.cms_extension.versionables
-                             for item in versionable.content_types]
+        content_type_list = list(set(
+            item for versionable in versioning_config.cms_extension.versionables
+            for item in versionable.content_types
+        ))
 
         self.assertCountEqual(
             field_content_type.choices.queryset.values_list('id', flat=True),
@@ -742,8 +720,10 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
         versioning_config = apps.get_app_config("djangocms_versioning")
 
         # The list is equal to the content type versionables
-        content_type_list = [item for versionable in versioning_config.cms_extension.versionables
-                             for item in versionable.content_types]
+        content_type_list = list(set(
+            item for versionable in versioning_config.cms_extension.versionables
+            for item in versionable.content_types
+        ))
 
         # We have to delete the reserved entry because it now exists!
         content_type_list.remove(poll_content_expiry.version.content_type.id)
