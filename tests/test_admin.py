@@ -1,5 +1,6 @@
 import datetime
 
+from django.apps import apps
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
@@ -14,24 +15,14 @@ from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
 from djangocms_content_expiry.conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
-from djangocms_content_expiry.models import ContentExpiry
-from djangocms_content_expiry.filters import ContentTypeFilter
-from djangocms_content_expiry.forms import ForeignKeyReadOnlyWidget
 from djangocms_content_expiry.models import (
     ContentExpiry,
     DefaultContentExpiryConfiguration,
 )
 from djangocms_content_expiry.test_utils.factories import (
     DefaultContentExpiryConfigurationFactory,
-    UserFactory,
 )
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
-from djangocms_content_expiry.test_utils.polymorphic_project.models import ProjectContent
-from djangocms_content_expiry.test_utils.polymorphic_project.factories import (
-    ArtProjectContentExpiryFactory,
-    ProjectContentExpiryFactory,
-    ResearchProjectContentExpiryFactory,
-)
 
 
 class ContentExpiryAdminViewsPermissionsTestCase(CMSTestCase):
@@ -121,173 +112,18 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         self.assertTrue('actions' in list_functions)
 
     def test_preview_link_published_object(self):
-class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
-
-    def setUp(self):
-        self.expiry_date = datetime.datetime.now() - datetime.timedelta(days=5)
-        self.poll_expiry = PollContentExpiryFactory(expires=self.expiry_date)
-        self.poll_expiry_c_type = self.poll_expiry.version.content_type.pk
-        self.project_expiry_set = ProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
-        self.project_expiry_c_type = self.project_expiry_set[0].version.content.polymorphic_ctype_id
-        self.art_expiry_set = ArtProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
-        self.art_expiry_c_type = self.art_expiry_set[0].version.content.polymorphic_ctype_id
-        self.research_expiry_set = ResearchProjectContentExpiryFactory.create_batch(2, expires=self.expiry_date)
-        self.research_expiry_c_type = self.research_expiry_set[0].version.content.polymorphic_ctype_id
-
-    def test_content_type_filter_lookup_values(self):
-        """
-        The lookup values should match the values of versioned content types!
-        """
-        versioning_config = apps.get_app_config("djangocms_versioning")
-        filter = ContentTypeFilter(None, {'content_type': ''}, ContentExpiry, ContentExpiryAdmin)
-
-        # The list is equal to the content type versionables, get a unique list
-        content_type_list = set(
-            ctype for versionable in versioning_config.cms_extension.versionables
-            for ctype in versionable.content_types
-        )
-        lookup_choices = set(
-            ctype[0] for ctype in filter.lookup_choices
-        )
-
-        self.assertSetEqual(lookup_choices, content_type_list)
-
-    def test_content_type_filter_for_simple_models(self):
         """
         For published objects the live link should be returned
         """
         content_expiry = PollContentExpiryFactory(version__state=PUBLISHED)
         poll_content = content_expiry.version.content
-        content_type = f"?content_type={self.poll_expiry_c_type}&state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + content_type)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [self.poll_expiry.version.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_content_type_filter_for_root_polymorphic_models(self):
-        """
-        Root polymorphic models should be shown when the model is selected. No other models should be shown,
-        especially any concrete models that inherited from the polymorphic model.
-        """
-        content_type = f"?content_type={self.project_expiry_c_type}&state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + content_type)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [self.project_expiry_set[0].version.pk, self.project_expiry_set[1].version.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_content_type_filter_for_concrete_art_polymorphic_models(self):
-        """
-        Specific concrete models should be shown when the model is selected. No other models should be shown,
-        especially any other models that inherit from the polymorphic model.
-        """
-        content_type = f"?content_type={self.art_expiry_c_type}&state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + content_type)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [self.art_expiry_set[0].version.pk, self.art_expiry_set[1].version.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_content_type_filter_for_concrete_research_polymorphic_models(self):
-        """
-        Specific concrete models should be shown when the model is selected. No other models should be shown,
-        especially any other models that inherit from the polymorphic model.
-        """
-        content_type = f"?content_type={self.research_expiry_c_type}&state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + content_type)
-
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [self.research_expiry_set[0].version.pk, self.research_expiry_set[1].version.pk],
-            transform=lambda x: x.pk,
-            ordered=False,
-        )
-
-    def test_content_type_filter_for_mix_of_concrete_and_root_polymorphic_models(self):
-        """
-        Specific concrete and root models should be shown when the models are selected.
-        No other models should be shown, especially any other models that inherit from the polymorphic model.
-        """
-        content_type = f"?content_type={self.project_expiry_c_type},{self.art_expiry_c_type}&state={DRAFT}"
-        admin_endpoint = self.get_admin_url(ContentExpiry, "changelist")
-
-        with self.login_user_context(self.get_superuser()):
-            response = self.client.get(admin_endpoint + content_type)
 
         self.assertEqual(
             self.site._registry[ContentExpiry]._get_preview_url(content_expiry),
-            poll_content.get_absolute_url()
-        self.assertQuerysetEqual(
-            response.context["cl"].queryset,
-            [
-                self.project_expiry_set[0].version.pk,
-                self.project_expiry_set[1].version.pk,
-                self.art_expiry_set[0].version.pk,
-                self.art_expiry_set[1].version.pk,
-             ],
-            transform=lambda x: x.pk,
-            ordered=False,
+            poll_content.get_absolute_url(),
         )
 
     def test_preview_link_draft_object(self):
-    def test_content_type_filter_performance_for_concrete_polymorphic_models(self):
-        """
-        """
-        filter = ContentTypeFilter(None, {'content_type': str(self.art_expiry_c_type)}, ContentExpiry, ContentExpiryAdmin)
-
-        with self.assertNumQueries(1):
-            # Evaluate the query
-            query_count = len(filter.queryset(None, ContentExpiry.objects.all()))
-
-        self.assertEqual(query_count, 6)
-
-    def test_content_type_filter_performance_for_simple_models(self):
-        """
-        """
-        filter = ContentTypeFilter(None, {'content_type': str(self.poll_expiry_c_type)}, ContentExpiry, ContentExpiryAdmin)
-
-        with self.assertNumQueries(1):
-            # Evaluate the query
-            query_count = len(filter.queryset(None, ContentExpiry.objects.all()))
-
-        self.assertEqual(query_count, 6)
-
-    def test_content_type_filter_performance_for_no_type_set(self):
-        """
-        """
-        filter = ContentTypeFilter(None, {'content_type': ''}, ContentExpiry, ContentExpiryAdmin)
-
-        with self.assertNumQueries(1):
-            # Evaluate the query
-            query_count = len(filter.queryset(None, ContentExpiry.objects.all()))
-
-        self.assertEqual(query_count, 7)
-
-
-class ContentExpiryChangelistVersionFilterTestCase(CMSTestCase):
-    def test_versions_filters_default(self):
         """
         For draft / editable objects the preview link should be returned
         """
@@ -516,9 +352,13 @@ class ContentExpiryChangelistPageContentSiteTestCase(CMSTestCase):
 
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
-            response = self.client.get(endpoint, follow=True)
 
-        self.assertEqual(response.status_code, 200)
+        queryset_result = response.context_data['cl'].result_list
+
+        # Sanity check that the correct site 2 is used
+        self.assertEqual(get_current_site(response.request), self.site_2)
+        self.assertTrue(len(queryset_result), 1)
+        self.assertTrue(queryset_result.first().pk, self.page_2_version.contentexpiry.pk)
 
 
 class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
@@ -561,10 +401,3 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
             item for versionable in versioning_config.cms_extension.versionables
             for item in versionable.content_types
         ))
-
-        queryset_result = response.context_data['cl'].result_list
-
-        # Sanity check that the correct site 2 is used
-        self.assertEqual(get_current_site(response.request), self.site_2)
-        self.assertTrue(len(queryset_result), 1)
-        self.assertTrue(queryset_result.first().pk, self.page_2_version.contentexpiry.pk)

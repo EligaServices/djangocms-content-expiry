@@ -60,46 +60,27 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             if expiry_record.version.content_type.pk not in content_types:
                 excludes.append(expiry_record.pk)
 
+    # def get_changelist(self, request, **kwargs):
+    #     """
+    #     Return the ChangeList class for use on the changelist page.
+    #     """
+    #     from .views import ContentExpiryChangeList
+    #     return ContentExpiryChangeList
+
     def queryset(self, request, queryset):
-        content_type = self.value()
-        if not content_type:
+        content_types = self.value()
+        if not content_types:
             return queryset
 
-        """
-        Jon: https://github.com/jazzband/django-model-utils/issues/414
-        
-        Prefetch generic content types of many types
-        
-        for each content type selected chain a prefetch??
-        
-        Get content types selected, 
-        for each submit to a CTE
-        
-        TODO: Reverse the 
-        """
+        for content_type in content_types.split(','):
+            content_type_obj = ContentType.objects.get_for_id(content_type)
+            content_type_model = content_type_obj.model_class()
 
-        queryset.prefetch_related(
-            Prefetch('version__content'),
-            queryset=ContentType.objects.get_for_model(model?????)
-        )
+            if hasattr(content_type_model, "polymorphic_ctype"):
+                # Q(version__versioningreverse__polymorphic_ctype=content_type_model)
+                pass
 
         return queryset.filter(version__content_type__in=content_type.split(','))
-
-        # content_types = self.value()
-        #
-        # if not content_types:
-        #     return queryset
-        #
-        # # Ensure that we are matching types int vs int
-        # content_types = [int(ctype) for ctype in content_types.split(',')]
-        # excludes = []
-        #
-        # # Build an exclusion list, this is caused by django-polymorphic models
-        # # where the Version content_type maps to the higher order model
-        # for expiry_record in queryset:
-        #     self._process_item_for_possible_exclusion(expiry_record, content_types, excludes)
-        #
-        # return queryset.exclude(pk__in=excludes)
 
     def choices(self, changelist):
         yield {
