@@ -71,7 +71,7 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
 
                 for expiry_record in queryset.filter(version__content_type=base_content_type):
                     content = expiry_record.version.content
-                    # If the model has
+                    # If the record's polymorphic content type matches the selected content type include it.
                     if content.polymorphic_ctype_id == content_type_obj.pk:
                         content_type_inclusion_list.append(expiry_record.id)
 
