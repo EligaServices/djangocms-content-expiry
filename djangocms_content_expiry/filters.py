@@ -44,25 +44,6 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             list.append((value.pk, value))
         return list
 
-    def _process_item_for_possible_exclusion(self, expiry_record, content_types, excludes):
-        """
-        Find polymorphic concrete models, this is required because versioning
-        is attached to the abstract model rather than the concrete model.
-
-        Find any simple models for exclusion which could normally be filtered out,
-        sadly this is not possible when polymorphic models are used.
-        """
-        content = expiry_record.version.content
-
-        # If we have django-polymorphic models, get the concrete content_type
-        if hasattr(content, "polymorphic_ctype"):
-            if content.polymorphic_ctype_id not in content_types:
-                excludes.append(expiry_record.pk)
-        # Otherwise we have standard django models
-        else:
-            if expiry_record.version.content_type.pk not in content_types:
-                excludes.append(expiry_record.pk)
-
     def queryset(self, request, queryset):
         content_types = self.value()
         if not content_types:
