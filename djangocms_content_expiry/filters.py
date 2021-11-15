@@ -54,33 +54,14 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             content_type_obj = ContentType.objects.get_for_id(content_type)
             content_type_model = content_type_obj.model_class()
 
-            # Handle any complex polymorphic models
-            if hasattr(content_type_model, "polymorphic_ctype"):
-                # Ideally we would reverse query like so, this is sadly not possible due to limitations
-                # in django polymorphic. The reverse capability is removed by adding + to the ctype foreign key :-(
-                # If polymorphic ever includes a reverse query capability this is all that is eeded
-                # related_query_name = f"{content_type_model._meta.app_label}_{content_type_model._meta.model_name}"
-                # filters.append(Q(**{
-                #     f"version__{related_query_name}__polymorphic_ctype": content_type_obj,
-                # }))
-
-                # Get all objects for the base model and then filter by the polymorphic content type
-                content_type_inclusion_list = []
-                base_content_model = get_base_polymorphic_model(content_type_model)
-                base_content_type = ContentType.objects.get_for_model(base_content_model)
-
-                for expiry_record in queryset.filter(version__content_type=base_content_type):
-                    content = expiry_record.version.content
-                    # If the record's polymorphic content type matches the selected content type include it.
-                    if content.polymorphic_ctype_id == content_type_obj.pk:
-                        content_type_inclusion_list.append(expiry_record.id)
-
-                filters.append(Q(id__in=content_type_inclusion_list))
             # For simple models simply filter by the content type
-            else:
+            if not hasattr(content_type_model, "polymorphic_ctype"):
                 filters.append(Q(version__content_type=content_type_obj))
 
-        return queryset.filter(reduce(lambda x, y: x | y, filters))
+        if filters:
+            return queryset.filter(reduce(lambda x, y: x | y, filters))
+
+        return queryset
 
     def choices(self, changelist):
         yield {
