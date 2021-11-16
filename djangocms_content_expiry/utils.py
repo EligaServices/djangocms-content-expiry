@@ -1,9 +1,9 @@
-from dateutil.relativedelta import relativedelta
 from functools import reduce
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
+from dateutil.relativedelta import relativedelta
 from polymorphic.utils import get_base_polymorphic_model
 
 from .admin import ContentTypeFilter
@@ -47,7 +47,12 @@ def get_future_expire_date(version, date):
 
 def _filter_content_type_polymorphic_content(request, queryset):
     """
+    Filter any polymorphic content types by their concrete implementation
 
+    :param request: a request object
+    :param queryset: a queryset object
+    :returns: The original queryset, or polymorphic attached filters
+              if a polymorphic content type is set
     """
     content_types = request.GET.get(ContentTypeFilter.parameter_name)
 
