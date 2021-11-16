@@ -47,7 +47,7 @@ def get_future_expire_date(version, date):
 
 def _filter_content_type_polymorphic_content(request, queryset):
     """
-    Filter any polymorphic content types by their concrete implementation
+    Filter any polymorphic content types by their concrete implementation.
 
     :param request: a request object
     :param queryset: a queryset object
