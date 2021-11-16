@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
 from djangocms_versioning.versionables import _cms_extension
+from polymorphic.utils import get_base_polymorphic_model
 from rangefilter.filters import DateRangeFilter
 
 from .helpers import get_rangefilter_expires_default
@@ -42,6 +43,56 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
             value = ContentType.objects.get_for_model(content_type)
             list.append((value.pk, value))
         return list
+
+    @staticmethod
+    def _filter_content_type_polymorphic_content(request, queryset):
+        """
+        Filter any polymorphic content types by their concrete implementation.
+
+        :param request: a request object
+        :param queryset: a queryset object
+        :returns: The original queryset, or polymorphic attached filters
+                  if a polymorphic content type is set
+        """
+        content_types = request.GET.get(ContentTypeFilter.parameter_name)
+
+        if not content_types:
+            return queryset
+
+        filters = []
+        for content_type in content_types.split(','):
+            # Sanitize the value input by the user before using it anywhere
+            content_type = int(content_type)
+            content_type_obj = ContentType.objects.get_for_id(content_type)
+            content_type_model = content_type_obj.model_class()
+
+            # Handle any complex polymorphic models
+            if hasattr(content_type_model, "polymorphic_ctype"):
+                # Ideally we would reverse query like so, this is sadly not possible due to limitations
+                # in django polymorphic. The reverse capability is removed by adding + to the ctype foreign key :-(
+                # If polymorphic ever includes a reverse query capability this is all that is eeded
+                # related_query_name = f"{content_type_model._meta.app_label}_{content_type_model._meta.model_name}"
+                # filters.append(Q(**{
+                #     f"version__{related_query_name}__polymorphic_ctype": content_type_obj,
+                # }))
+
+                # Get all objects for the base model and then filter by the polymorphic content type
+                content_type_inclusion_list = []
+                base_content_model = get_base_polymorphic_model(content_type_model)
+                base_content_type = ContentType.objects.get_for_model(base_content_model)
+
+                for expiry_record in queryset.filter(version__content_type=base_content_type):
+                    content = expiry_record.version.content
+                    # If the record's polymorphic content type matches the selected content type include it.
+                    if content.polymorphic_ctype_id == content_type_obj.pk:
+                        content_type_inclusion_list.append(expiry_record.id)
+
+                filters.append(Q(id__in=content_type_inclusion_list))
+
+        if filters:
+            return queryset.filter(reduce(lambda x, y: x | y, filters))
+
+        return queryset
 
     def queryset(self, request, queryset):
         content_types = self.value()

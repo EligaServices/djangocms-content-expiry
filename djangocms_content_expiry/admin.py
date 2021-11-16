@@ -24,7 +24,6 @@ from .filters import (
 from .forms import ContentExpiryForm, DefaultContentExpiryConfigurationForm
 from .helpers import get_rangefilter_expires_default
 from .models import ContentExpiry, DefaultContentExpiryConfiguration
-from .utils import _filter_content_type_polymorphic_content
 
 
 @admin.register(ContentExpiry)
@@ -49,7 +48,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         # CAVEAT: The content type filter requires splitting by polymorphic models,
         #         This is a very heavy operation so it's important that all filters are first
         #         applied before we attempt to split the set further.
-        queryset = _filter_content_type_polymorphic_content(request, queryset)
+        queryset = ContentTypeFilter._filter_content_type_polymorphic_content(request, queryset)
 
         return super().get_search_results(
             request, queryset, search_term,
