@@ -1,9 +1,6 @@
-from functools import reduce
-
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning.constants import PUBLISHED, VERSION_STATES
@@ -38,11 +35,18 @@ class ContentTypeFilter(SimpleListMultiselectFilter):
     template = 'djangocms_content_expiry/multiselect_filter.html'
 
     def lookups(self, request, model_admin):
-        list = []
-        for content_type in _cms_extension().versionables_by_content:
-            value = ContentType.objects.get_for_model(content_type)
-            list.append((value.pk, value))
-        return list
+        lookup_list = []
+        for content_model in _cms_extension().versionables_by_content:
+            # Only add references to the inherited concrete model i.e. not referenced polymorphic models
+            if hasattr(content_model, "polymorphic_ctype"):
+                content_model = get_base_polymorphic_model(content_model)
+            # Create an entry
+            content_type = ContentType.objects.get_for_model(content_model)
+            lookup_list_entry = (content_type.pk, content_type)
+            # Only add unique entries
+            if lookup_list_entry not in lookup_list:
+                lookup_list.append(lookup_list_entry)
+        return lookup_list
 
     def queryset(self, request, queryset):
         content_types = self.value()

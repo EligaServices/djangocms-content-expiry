@@ -4,10 +4,12 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
 
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
+from djangocms_versioning.datastructures import VersionableItemAlias
 from freezegun import freeze_time
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
@@ -219,11 +221,15 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         versioning_config = apps.get_app_config("djangocms_versioning")
         filter = ContentTypeFilter(None, {'content_type': ''}, ContentExpiry, ContentExpiryAdmin)
 
+        # Get a unique list of versionables that are not polymorphic
+        content_types = []
+        for versionable in versioning_config.cms_extension.versionables:
+            if not isinstance(versionable, VersionableItemAlias):
+                content_type = ContentType.objects.get_for_model(versionable.content_model)
+                content_types.append(content_type.pk)
+
         # The list is equal to the content type versionables, get a unique list
-        content_type_list = set(
-            ctype for versionable in versioning_config.cms_extension.versionables
-            for ctype in versionable.content_types
-        )
+        content_type_list = set(content_types)
         lookup_choices = set(
             ctype[0] for ctype in filter.lookup_choices
         )
