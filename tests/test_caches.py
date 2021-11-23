@@ -92,3 +92,8 @@ class ContentExpiryPageContentCacheMechanismTestCase(CMSTestCase):
             self.assertNotEqual(site_2_cached_value, site_2_value)
             self.assertEqual(site_1_cached_value, None)
             self.assertEqual(site_2_cached_value, None)
+
+# TODO
+# Create a couple of content objects
+# Run the command and check that the dates are added for existing way
+# Run the command and chekc that the dates are added the new way
