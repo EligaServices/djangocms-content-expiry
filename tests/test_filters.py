@@ -219,7 +219,7 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         The lookup values should match the values of versioned content types!
         """
         versioning_config = apps.get_app_config("djangocms_versioning")
-        filter = ContentTypeFilter(None, {'content_type': ''}, ContentExpiry, ContentExpiryAdmin)
+        content_type_filter = ContentTypeFilter(None, {'content_type': ''}, ContentExpiry, ContentExpiryAdmin)
 
         # Get a unique list of versionables that are not polymorphic
         content_types = []
@@ -231,7 +231,7 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
         # The list is equal to the content type versionables, get a unique list
         content_type_list = set(content_types)
         lookup_choices = set(
-            ctype[0] for ctype in filter.lookup_choices
+            ctype[0] for ctype in content_type_filter.lookup_choices
         )
 
         self.assertSetEqual(lookup_choices, content_type_list)
