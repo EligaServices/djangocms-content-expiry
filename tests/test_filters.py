@@ -1,4 +1,5 @@
 import datetime
+from unittest import skip
 from unittest.mock import patch
 
 from django.apps import apps
@@ -256,11 +257,19 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
 
         self.assertQuerysetEqual(
             response.context["cl"].queryset,
-            [self.project_expiry_set[0].version.pk, self.project_expiry_set[1].version.pk],
+            [
+                self.project_expiry_set[0].version.pk,
+                self.project_expiry_set[1].version.pk,
+                self.art_expiry_set[0].version.pk,
+                self.art_expiry_set[1].version.pk,
+                self.research_expiry_set[0].version.pk,
+                self.research_expiry_set[1].version.pk,
+            ],
             transform=lambda x: x.pk,
             ordered=False,
         )
 
+    @skip("Polymorphic filtering support is currently not supported due to slow performance")
     def test_content_type_filter_for_concrete_art_polymorphic_models(self):
         """
         Specific concrete models should be shown when the model is selected. No other models should be shown,
@@ -279,6 +288,7 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
             ordered=False,
         )
 
+    @skip("Polymorphic filtering support is currently not supported due to slow performance")
     def test_content_type_filter_for_concrete_research_polymorphic_models(self):
         """
         Specific concrete models should be shown when the model is selected. No other models should be shown,
@@ -297,6 +307,7 @@ class ContentExpiryContentTypeFilterTestCase(CMSTestCase):
             ordered=False,
         )
 
+    @skip("Polymorphic filtering support is currently not supported due to slow performance")
     def test_content_type_filter_for_mix_of_concrete_and_root_polymorphic_models(self):
         """
         Specific concrete and root models should be shown when the models are selected.
