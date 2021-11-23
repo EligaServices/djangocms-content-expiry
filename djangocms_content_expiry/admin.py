@@ -100,9 +100,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         """
         A field to display the content type as a readable representation
         """
-        return ContentType.objects.get_for_model(
-            obj.version.content
-        )
+        return obj.version.content_type
     content_type.short_description = _('Content type')
 
     def version_state(self, obj):
