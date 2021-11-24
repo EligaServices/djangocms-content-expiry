@@ -6,6 +6,10 @@ unreleased
 ==========
 # feat: Data migration now has a fixed date option that allows the user running the command to provide a datetime and provide a custom format
 
+0.0.6 (2021-11-23)
+==================
+* fix: Content Expiry Changelist: Removed polymorphic model support due to persistant timeouts and low performance
+
 0.0.5 (2021-11-16)
 ==================
 * fix: Content Expiry Changelist: Timeouts due to Content Type filtering by polymorphic models using the full data set.
