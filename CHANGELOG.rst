@@ -5,6 +5,7 @@ Changelog
 unreleased
 ==========
 # feat: Data migration now has a fixed date option that allows the user running the command to provide a datetime and provide a custom format
+* fix: CSV Export contains the polymorphic content type when it shouldn't
 
 0.0.6 (2021-11-23)
 ==================
