@@ -5,17 +5,19 @@ import factory
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.utils import timezone
 
 from cms.test_utils.testcases import CMSTestCase
 
 from djangocms_versioning.models import Version
 from djangocms_versioning.signals import post_version_operation, pre_version_operation
 
+from djangocms_content_expiry.utils import get_default_duration_for_version
 from djangocms_content_expiry.test_utils.polls.factories import PollVersionFactory
 from djangocms_content_expiry.test_utils.polymorphic_project.factories import ProjectContentVersionFactory
 
 
-class CreateExpiryRecordsTestCase(TestCase):
+class CreateExpiryRecordsDefaultLogicTestCase(TestCase):
 
     def setUp(self):
         self.out = StringIO()
@@ -35,7 +37,44 @@ class CreateExpiryRecordsTestCase(TestCase):
             self.out.getvalue()
         )
 
+    @factory.django.mute_signals(pre_version_operation, post_version_operation)
+    def test_default_logic(self):
+        """
+        By default all expiry records will use a default expiry date
+        """
+        poll_content_versions = PollVersionFactory.create_batch(5, content__language="en")
+        project_content_versions = ProjectContentVersionFactory.create_batch(5)
+
+        # A sanity check to ensure that the models don't have expiry records attached
+        # because we are adding them in the command!
+        self.assertFalse(hasattr(poll_content_versions[0], "contentexpiry"))
+        self.assertFalse(hasattr(project_content_versions[0], "contentexpiry"))
+
+        call_command(
+            "create_existing_versions_expiry_records",
+            stdout=self.out,
+        )
+
+        versions = Version.objects.all()
+
+        self.assertEqual(len(versions), 10)
+
+        for version in versions:
+            expected_date = version.modified + get_default_duration_for_version(version)
+
+            self.assertEqual(version.contentexpiry.expires, expected_date)
+
+
+class CreateExpiryRecordsDateOverrideLogicTestCase(CMSTestCase):
+
+    def setUp(self):
+        self.out = StringIO()
+
     def test_date_options_valid_date_default_format(self):
+        """
+        When a valid date string is supplied an informative message is supplied
+        stating that it is valid
+        """
         date = "2100-02-22"
 
         call_command(
@@ -50,6 +89,10 @@ class CreateExpiryRecordsTestCase(TestCase):
         )
 
     def test_date_options_invalid_date_default_format(self):
+        """
+        When a date string is supplied that doesn't match the default format string an
+        informative error message should be shown to the user
+        """
         date = "210-02-22"
 
         with self.assertRaisesMessage(CommandError, f"This is an incorrect date string: {date} for the format: %Y-%m-%d"):
@@ -61,6 +104,10 @@ class CreateExpiryRecordsTestCase(TestCase):
             )
 
     def test_date_options_valid_date_supplied_format(self):
+        """
+        When a valid date string is supplied an informative message is supplied
+        stating that it is valid
+        """
         date = "22022100"
         date_format = "%d%m%Y"
 
@@ -77,6 +124,10 @@ class CreateExpiryRecordsTestCase(TestCase):
         )
 
     def test_date_options_invalid_date_supplied_format(self):
+        """
+        When a date string is supplied that doesn't match the default format string an
+        informative error message should be shown to the user
+        """
         date = "210-02-22"
         date_format = "%d%m%Y"
 
@@ -89,37 +140,21 @@ class CreateExpiryRecordsTestCase(TestCase):
                 stdout=self.out,
             )
 
-
-class CreateExpiryRecordsDateOverrideTestCase(CMSTestCase):
-
     @factory.django.mute_signals(pre_version_operation, post_version_operation)
-    def setUp(self):
-        self.out = StringIO()
-
+    def test_date_supplied_import_logic(self):
+        """
+        When a date is supplied to the command all content expiry records
+        should expire on that exact date and time
+        """
+        date = "2100-02-22"
+        date_format = "%Y-%m-%d"
         poll_content_versions = PollVersionFactory.create_batch(5, content__language="en")
         project_content_versions = ProjectContentVersionFactory.create_batch(5)
 
-        # A sanity check to ensure that the models don't have expiry records attached!
+        # A sanity check to ensure that the models don't have expiry records attached
+        # because we are adding them in the command!
         self.assertFalse(hasattr(poll_content_versions[0], "contentexpiry"))
         self.assertFalse(hasattr(project_content_versions[0], "contentexpiry"))
-
-    def test_option_one(self):
-
-        call_command(
-            "create_existing_versions_expiry_records",
-            stdout=self.out,
-        )
-
-        versions = Version.objects.all()
-
-        self.assertEqual(len(versions), 10)
-
-        for version in versions:
-            self.assertEqual(version.contentexpiry.expires, "")
-
-    def test_option_two(self):
-        date = "2100-02-22"
-        date_format = "%Y-%m-%d"
 
         call_command(
             "create_existing_versions_expiry_records",
@@ -134,5 +169,6 @@ class CreateExpiryRecordsDateOverrideTestCase(CMSTestCase):
 
         for version in versions:
             expected_date = datetime.strptime(date, date_format)
+            expected_date = timezone.make_aware(expected_date)
 
             self.assertEqual(version.contentexpiry.expires, expected_date)
