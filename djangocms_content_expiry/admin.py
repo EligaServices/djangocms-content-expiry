@@ -228,7 +228,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         ])
 
         for content_expiry in queryset:
-            content_type = ContentType.objects.get_for_model(content_expiry.version.content)
+            content_type = self.content_type(content_expiry)
             expiry_date = self._format_export_datetime(content_expiry.expires)
             version_state = content_expiry.version.get_state_display()
             # Get an external / sharable link
