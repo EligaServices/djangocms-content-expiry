@@ -1,6 +1,5 @@
 from datetime import datetime
 from io import StringIO
-import factory
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -9,12 +8,15 @@ from django.utils import timezone
 
 from cms.test_utils.testcases import CMSTestCase
 
+import factory
 from djangocms_versioning.models import Version
 from djangocms_versioning.signals import post_version_operation, pre_version_operation
 
-from djangocms_content_expiry.utils import get_default_duration_for_version
 from djangocms_content_expiry.test_utils.polls.factories import PollVersionFactory
-from djangocms_content_expiry.test_utils.polymorphic_project.factories import ProjectContentVersionFactory
+from djangocms_content_expiry.test_utils.polymorphic_project.factories import (
+    ProjectContentVersionFactory,
+)
+from djangocms_content_expiry.utils import get_default_duration_for_version
 
 
 class CreateExpiryRecordsDefaultLogicTestCase(TestCase):
@@ -95,7 +97,10 @@ class CreateExpiryRecordsDateOverrideLogicTestCase(CMSTestCase):
         """
         date = "210-02-22"
 
-        with self.assertRaisesMessage(CommandError, f"This is an incorrect date string: {date} for the format: %Y-%m-%d"):
+        with self.assertRaisesMessage(
+            CommandError,
+            f"This is an incorrect date string: {date} for the format: %Y-%m-%d"
+        ):
 
             call_command(
                 "create_existing_versions_expiry_records",
@@ -131,7 +136,10 @@ class CreateExpiryRecordsDateOverrideLogicTestCase(CMSTestCase):
         date = "210-02-22"
         date_format = "%d%m%Y"
 
-        with self.assertRaisesMessage(CommandError, f"This is an incorrect date string: {date} for the format: {date_format}"):
+        with self.assertRaisesMessage(
+                CommandError,
+                f"This is an incorrect date string: {date} for the format: {date_format}"
+        ):
 
             call_command(
                 "create_existing_versions_expiry_records",

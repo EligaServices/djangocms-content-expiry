@@ -39,19 +39,23 @@ class Command(BaseCommand):
             )
 
             self.stdout.write(
-                f"Content Expiry: {expiry.pk} created for version: {version.pk}")
+                f"Content Expiry: {expiry.pk} created for version: {version.pk}"
+            )
 
     def _validate_user_supplied_date(self, expiry_date_string, expiry_date_format):
         """
         Ensure that the date supplied is valid.
         """
         self.stdout.write(
-            f"Formatting user supplied date: {expiry_date_string} using the format: {expiry_date_format}")
+            f"Formatting user supplied date: {expiry_date_string} using the format: {expiry_date_format}"
+        )
 
         try:
             date = datetime.strptime(expiry_date_string, expiry_date_format)
         except ValueError:
-            raise CommandError(f"This is an incorrect date string: {expiry_date_string} for the format: {expiry_date_format}")
+            raise CommandError(
+                f"This is an incorrect date string: {expiry_date_string} for the format: {expiry_date_format}"
+            )
 
         return date
 
@@ -65,7 +69,8 @@ class Command(BaseCommand):
             'expiry_date_format',
             nargs='?',
             default="%Y-%m-%d",
-            help="The format that the expiry_date is provided. Uses strptime with the default format: %Y-%m-%d e.g. 2030-03-30"
+            help="The format that the expiry_date is provided. "
+                 "Uses strptime with the default format: %Y-%m-%d e.g. 2030-03-30"
         )
 
     def handle(self, *args, **options):
