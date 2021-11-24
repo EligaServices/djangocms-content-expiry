@@ -137,8 +137,8 @@ class CreateExpiryRecordsDateOverrideLogicTestCase(CMSTestCase):
         date_format = "%d%m%Y"
 
         with self.assertRaisesMessage(
-                CommandError,
-                f"This is an incorrect date string: {date} for the format: {date_format}"
+            CommandError,
+            f"This is an incorrect date string: {date} for the format: {date_format}"
         ):
 
             call_command(
