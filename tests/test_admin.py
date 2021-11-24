@@ -25,7 +25,7 @@ from djangocms_content_expiry.test_utils.factories import (
 )
 from djangocms_content_expiry.test_utils.polls.factories import PollContentExpiryFactory
 from djangocms_content_expiry.test_utils.polymorphic_project.factories import (
-    ArtProjectContentExpiryFactory
+    ArtProjectContentExpiryFactory,
 )
 
 
