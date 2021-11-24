@@ -61,12 +61,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'expiry_date',
+            '--expiry_date',
             nargs='?',
             help="A fixed date to force all expiry records to use."
         )
         parser.add_argument(
-            'expiry_date_format',
+            '--expiry_date_format',
             nargs='?',
             default="%Y-%m-%d",
             help="The format that the expiry_date is provided. "
