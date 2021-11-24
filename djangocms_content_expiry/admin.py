@@ -4,7 +4,6 @@ import datetime
 from django.apps import apps
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
