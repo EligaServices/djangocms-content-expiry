@@ -1,8 +1,7 @@
-from dateutil.relativedelta import relativedelta
-
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 
+from dateutil.relativedelta import relativedelta
 from djangocms_versioning.datastructures import VersionableItemAlias
 
 from .conf import DEFAULT_CONTENT_EXPIRY_DURATION

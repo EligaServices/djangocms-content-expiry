@@ -9,8 +9,11 @@ from .conf import DEFAULT_CONTENT_EXPIRY_DURATION
 from .constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
-
 def _limit_content_type_choices():
+    """
+    Get a limited list of the content types that the
+    DefaultContentExpiryConfiguration model can use
+    """
     from .utils import get_versionable_content_types
 
     content_type_list = get_versionable_content_types()
