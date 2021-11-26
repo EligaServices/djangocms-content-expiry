@@ -1,6 +1,5 @@
 import datetime
 
-from django.apps import apps
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
