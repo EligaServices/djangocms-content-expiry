@@ -4,16 +4,17 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from djangocms_versioning.models import Version
-from djangocms_versioning.versionables import _cms_extension
 
 from .conf import DEFAULT_CONTENT_EXPIRY_DURATION
 from .constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
 
 
+
 def _limit_content_type_choices():
-    model_list = [value for value in _cms_extension().versionables_by_content]
-    content_type_list = ContentType.objects.get_for_models(*model_list).items()
-    inclusion = [content_type.pk for key, content_type in content_type_list]
+    from .utils import get_versionable_content_types
+
+    content_type_list = get_versionable_content_types()
+    inclusion = [content_type.pk for content_type in content_type_list]
     return {"id__in": inclusion}
 
 
