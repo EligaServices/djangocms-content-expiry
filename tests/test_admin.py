@@ -413,7 +413,6 @@ class DefaultContentExpiryConfigurationAdminViewsFormsTestCase(CMSTestCase):
         """
         form = admin.site._registry[DefaultContentExpiryConfiguration].form()
         field_content_type = form.fields['content_type']
-        versioning_config = apps.get_app_config("djangocms_versioning")
 
         # The list is equal to the content type versionables, get a unique list
         content_type_set = _get_content_types_set()
