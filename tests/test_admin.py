@@ -3,7 +3,7 @@ import datetime
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.test import override_settings, RequestFactory
+from django.test import RequestFactory, override_settings
 from django.utils import timezone
 
 from cms.api import create_page
