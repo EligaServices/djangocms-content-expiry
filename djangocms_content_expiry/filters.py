@@ -190,3 +190,28 @@ class ContentExpiryDateRangeFilter(DateRangeFilter):
             queryset = queryset.filter(expires__range=(default_gte, default_lte))
 
         return queryset
+
+
+class ComplianceNumberFilter(admin.SimpleListFilter):
+    template = 'djangocms_content_expiry/input_filter.html'
+    title = _("Compliance Number")
+    parameter_name = "compliance_number"
+
+    def lookups(self, request, model_admin):
+        # Required to show the filter.
+        return (),
+
+    def choices(self, changelist):
+        # Grab only the "all" option.
+        choice = next(super().choices(changelist))
+        choice['query_parts'] = (
+            (k, v)
+            for k, v in changelist.get_filters_params().items()
+            if k != self.parameter_name
+        )
+        yield choice
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(compliance_number=self.value()).distinct()
+        return queryset
