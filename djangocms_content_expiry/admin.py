@@ -30,7 +30,8 @@ from .models import ContentExpiry, DefaultContentExpiryConfiguration
 class ContentExpiryAdmin(admin.ModelAdmin):
     list_display = ['title', 'content_type', 'expires', 'version_state', 'version_author']
     list_display_links = None
-    list_filter = (ComplianceNumberFilter, ContentTypeFilter, ('expires', ContentExpiryDateRangeFilter), VersionStateFilter, AuthorFilter)
+    list_filter = (ComplianceNumberFilter, ContentTypeFilter, ('expires', ContentExpiryDateRangeFilter),
+                   VersionStateFilter, AuthorFilter)
     form = ContentExpiryForm
     change_list_template = "djangocms_content_expiry/admin/change_list.html"
 
