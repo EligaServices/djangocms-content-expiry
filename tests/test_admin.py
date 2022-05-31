@@ -88,6 +88,19 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
         self.assertIn('name="expires_0"', decoded_response)
         self.assertIn('name="expires_1"', decoded_response)
 
+    def test_change_form_title(self):
+        """
+        Ensure that the change form title is as expected
+        """
+        content_expiry = PollContentExpiryFactory()
+        endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
+
+        with self.login_user_context(self.get_superuser()):
+            response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context_data['title'], 'Compliance Number & Change Content Expiry')
+
 
 class ContentExpiryChangelistTestCase(CMSTestCase):
     def setUp(self):
