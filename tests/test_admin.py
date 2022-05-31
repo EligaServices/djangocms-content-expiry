@@ -3,7 +3,7 @@ import datetime
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.test import override_settings
+from django.test import override_settings, RequestFactory
 from django.utils import timezone
 
 from cms.api import create_page
@@ -150,6 +150,20 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         self.assertEqual(
             self.site._registry[ContentExpiry]._get_preview_url(content_expiry),
             poll_content.get_preview_url()
+        )
+
+    def test_change_icon_tooltip(self):
+        """
+        Ensure the change list presents correct tooltip when hovering over the change expiry  icon
+        """
+        content_expiry = PollContentExpiryFactory(version__state=DRAFT)
+        request = RequestFactory().get("/admin/djangocms_content_expiry/")
+        edit_link = self.site._registry[ContentExpiry]._get_edit_link(content_expiry, request)
+        # Slicing the edit link to get the tooltip title
+        link_title_tooltip = edit_link[119:][:31]
+
+        self.assertEqual(
+            link_title_tooltip, 'View expiry & compliance number'
         )
 
 
