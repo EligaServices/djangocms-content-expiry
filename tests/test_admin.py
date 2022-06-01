@@ -150,9 +150,10 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
             "title": 0,
             "ctype": 1,
             "expiry_date": 2,
-            "version_state": 3,
-            "version_author": 4,
-            "url": 5,
+            "compliance_number": 3,
+            "version_state": 4,
+            "version_author": 5,
+            "url": 6,
         }
         self.export_admin_endpoint = self.get_admin_url(ContentExpiry, "export_csv") + "?state=_all_"
 
@@ -197,6 +198,10 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         self.assertEqual(
             csv_headings[self.headings_map["expiry_date"]],
             "Expiry Date"
+        )
+        self.assertEqual(
+            csv_headings[self.headings_map["compliance_number"]],
+            "Compliance Number"
         )
         self.assertEqual(
             csv_headings[self.headings_map["version_state"]],
@@ -245,6 +250,10 @@ class ContentExpiryCsvExportFileTestCase(CMSTestCase):
         self.assertEqual(
             content_row_1[self.headings_map["expiry_date"]],
             poll_content_expiry.expires.strftime(DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT)
+        )
+        self.assertEqual(
+            content_row_1[self.headings_map["compliance_number"]],
+            poll_content_expiry.compliance_number
         )
         self.assertEqual(
             content_row_1[self.headings_map["version_state"]],
