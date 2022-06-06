@@ -154,7 +154,7 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
 
     def test_change_icon_tooltip(self):
         """
-        Ensure the change list presents correct tooltip when hovering over the change expiry  icon
+        The change list presents the correct tooltip when hovering over the change expiry icon
         """
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
         request = RequestFactory().get("/admin/djangocms_content_expiry/")
