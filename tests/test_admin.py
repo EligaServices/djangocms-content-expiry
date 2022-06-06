@@ -90,7 +90,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
 
     def test_change_form_title(self):
         """
-        Ensure that the change form title is as expected
+        The change form title is populated with the custom value
         """
         content_expiry = PollContentExpiryFactory()
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
