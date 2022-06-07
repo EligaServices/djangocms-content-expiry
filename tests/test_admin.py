@@ -156,11 +156,15 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         """
         The change list presents the correct tooltip when hovering over the change expiry icon
         """
+        from bs4 import BeautifulSoup
+
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
         request = RequestFactory().get("/admin/djangocms_content_expiry/")
         edit_link = self.site._registry[ContentExpiry]._get_edit_link(content_expiry, request)
-        # Slicing the edit link to get the tooltip title
-        link_title_tooltip = edit_link[119:][:31]
+
+        soup = BeautifulSoup(str(edit_link), features="lxml")
+        actual_link = soup.find("a")
+        link_title_tooltip = actual_link.get("title")
 
         self.assertEqual(
             link_title_tooltip, 'View expiry & compliance number'
