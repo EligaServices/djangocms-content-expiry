@@ -4,7 +4,8 @@ Changelog
 
 unreleased
 ==========
-feat: Compliance number added to list display and csv export
+* feat: Compliance number added to list display and csv export
+* feat: Added compliance number field
 
 1.0.0 (2022-04-25)
 ==================
