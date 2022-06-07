@@ -10,6 +10,8 @@ from cms.api import create_page
 from cms.models import PageContent
 from cms.test_utils.testcases import CMSTestCase
 
+from bs4 import BeautifulSoup
+
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
@@ -157,8 +159,6 @@ class ContentExpiryChangelistTestCase(CMSTestCase):
         """
         The change list presents the correct tooltip when hovering over the change expiry icon
         """
-        from bs4 import BeautifulSoup
-
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
         request = RequestFactory().get("/admin/djangocms_content_expiry/")
         edit_link = self.site._registry[ContentExpiry]._get_edit_link(content_expiry, request)
