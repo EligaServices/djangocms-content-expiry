@@ -5,6 +5,7 @@ Changelog
 unreleased
 ==========
 * feat: Compliance number filter added
+* feat: Added compliance number field
 
 1.0.0 (2022-04-25)
 ==================
