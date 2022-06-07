@@ -11,7 +11,6 @@ from cms.models import PageContent
 from cms.test_utils.testcases import CMSTestCase
 
 from bs4 import BeautifulSoup
-
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
