@@ -43,7 +43,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         }
 
     def change_view(self, request, object_id, extra_context=None):
-        extra_context = {'title': 'Compliance Number & Change Content Expiry'}
+        extra_context = {'title': 'Additional content settings'}
         return super(ContentExpiryAdmin, self).change_view(request, object_id, extra_context=extra_context)
 
     def get_queryset(self, request):
