@@ -198,11 +198,20 @@ class ComplianceNumberFilter(admin.SimpleListFilter):
     parameter_name = "compliance_number"
 
     def lookups(self, request, model_admin):
-        # Required to show the filter.
+        """
+        Required to show the filter
+        :param request: Request object
+        :param model_admin: Content expiry admin object
+        :return: Empty tuple
+        """
         return (),
 
     def choices(self, changelist):
-        # Grab only the "all" option.
+        """
+        Since the filter accept input, we only need the "all" choice option
+        :param changelist: Changelist object
+        :return: Choice object containing display choices
+        """
         choice = next(super().choices(changelist))
         choice['query_parts'] = (
             (k, v)
@@ -212,6 +221,12 @@ class ComplianceNumberFilter(admin.SimpleListFilter):
         yield choice
 
     def queryset(self, request, queryset):
+        """
+        Filtered queryset based on value provided
+        :param request: Request object
+        :param queryset: Content Expiry queryset
+        :return: Filtered queryset
+        """
         if self.value():
             return queryset.filter(compliance_number=self.value()).distinct()
         return queryset
