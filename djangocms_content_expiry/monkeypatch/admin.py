@@ -56,6 +56,11 @@ moderation_admin.ModerationRequestTreeAdmin.get_urls = _get_urls(moderation_admi
 
 
 def copy_content_expiry_view(self, request):
+    """
+    Copy expiration date and compliance number to all items in a collection
+    :param request:
+    :return: Redirect to the moderation changelist to ensure a page reload occurs
+    """
     compliance_copy = request.GET.get("copy", None)
     collection_id = request.GET.getlist("collection__id")
     collection_id = int(collection_id[0])

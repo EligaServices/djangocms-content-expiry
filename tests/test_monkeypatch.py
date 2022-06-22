@@ -178,6 +178,7 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
         )
 
         # Check that compliance numbers are different before we hit the copy endpoint!
+        self.assertEqual(ContentExpiry.objects.count(), 2)
         self.assertNotEqual(ContentExpiry.objects.first().compliance_number,
                             ContentExpiry.objects.last().compliance_number)
 
@@ -198,7 +199,7 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
         content_expiry = factories.PollContentExpiryFactory(
             expires=self.expires_secondary,
             version__state=PUBLISHED,
-            compliance_number=None,
+            compliance_number="",
         )
         moderation_request = ModerationRequestFactory(
             collection=self.collection,
@@ -211,7 +212,8 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
         # Check that compliance numbers are not set before we hit the copy endpoint!
         content_expiry_record = ContentExpiry.objects.first()
         # Removing the compliance number set in the setup
-        content_expiry_record.compliance_number = None
+        content_expiry_record.compliance_number = ""
+        # Both records should not contain a compliance number as it has not been set
         self.assertEqual(content_expiry_record.compliance_number, ContentExpiry.objects.last().compliance_number)
 
         response = self.client.post(self.url + "&copy=compliance")
