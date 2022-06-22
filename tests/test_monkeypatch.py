@@ -214,7 +214,8 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
         # Removing the compliance number set in the setup
         content_expiry_record.compliance_number = ""
         # Both records should not contain a compliance number as it has not been set
-        self.assertEqual(content_expiry_record.compliance_number, ContentExpiry.objects.last().compliance_number)
+        self.assertEqual(content_expiry_record.compliance_number, "")
+        self.assertEqual(ContentExpiry.objects.last().compliance_number, "")
 
         response = self.client.post(self.url + "&copy=compliance")
 
