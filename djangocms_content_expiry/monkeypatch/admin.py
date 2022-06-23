@@ -1,34 +1,67 @@
 from django.conf.urls import url
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from djangocms_moderation import admin as moderation_admin
 from djangocms_moderation.models import ModerationCollection, ModerationRequest
 from djangocms_versioning import admin
 
-from djangocms_content_expiry.constants import CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
+from djangocms_content_expiry.constants import CONTENT_EXPIRY_COMPLIANCE_FIELD_LABEL
 from djangocms_content_expiry.models import ContentExpiry
 
 
-def expires(self, obj):
+def _get_expiry_link(self, obj, request):
+    """
+    Generate an content expiry link for the Versioning Admin
+    """
+    expiry_url = reverse(
+        "admin:{app}_{model}_change".format(
+            app=ContentExpiry._meta.app_label, model=ContentExpiry._meta.model_name
+        ),
+        args=(obj.contentexpiry.pk,),
+    )
+    return render_to_string(
+        'djangocms_content_expiry/calendar_icon.html',
+        {
+            "url": f"{expiry_url}?_popup=1",
+        }
+    )
+
+
+admin.VersionAdmin._get_expiry_link = _get_expiry_link
+
+
+def get_state_actions(func):
+    """
+    Add custom Version Lock actions to Versioning state actions
+    """
+    def inner(self, *args, **kwargs):
+        state_list = func(self, *args, **kwargs)
+        state_list.append(self._get_expiry_link)
+        return state_list
+    return inner
+
+
+def compliance_number(self, obj):
     version = ContentExpiry.objects.filter(version=obj.pk)
     if version:
-        return version[0].expires
+        return version[0].compliance_number
     return ""
 
 
-expires.short_description = CONTENT_EXPIRY_EXPIRE_FIELD_LABEL
-admin.VersionAdmin.expire = expires
+compliance_number.short_description = CONTENT_EXPIRY_COMPLIANCE_FIELD_LABEL
+admin.VersionAdmin.compliance_number = compliance_number
 
 
 def get_list_display(func):
     """
-    Register the expires field with the Versioning Admin
+    Register the compliance number field with the Versioning Admin
     """
     def inner(self, request):
         list_display = func(self, request)
         created_by_index = list_display.index('created_by')
-        return list_display[:created_by_index] + ('expire',) + list_display[created_by_index:]
+        return list_display[:created_by_index] + ('compliance_number',) + list_display[created_by_index:]
 
     return inner
 
