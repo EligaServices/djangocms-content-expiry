@@ -20,9 +20,7 @@ from djangocms_content_expiry.test_utils.factories import (
     UserFactory,
 )
 from djangocms_content_expiry.test_utils.polls import factories
-from djangocms_content_expiry.test_utils.polls.cms_config import (
-    PollsCMSConfig,
-)
+from djangocms_content_expiry.test_utils.polls.cms_config import PollsCMSConfig
 
 
 class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
@@ -252,4 +250,3 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, additional_settings_control, html=True)
-
