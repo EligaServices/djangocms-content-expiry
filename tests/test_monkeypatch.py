@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib import admin
+from django.template.loader import render_to_string
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -19,6 +20,9 @@ from djangocms_content_expiry.test_utils.factories import (
     UserFactory,
 )
 from djangocms_content_expiry.test_utils.polls import factories
+from djangocms_content_expiry.test_utils.polls.cms_config import (
+    PollsCMSConfig,
+)
 
 
 class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
@@ -49,6 +53,7 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
             collection_id=self.collection.pk,
             mr_id=self.moderation_request1.pk,
         )
+        self.versionable = PollsCMSConfig.versioning[0]
 
     def test_extended_admin_monkey_patch_list_display_expires(self):
         """
@@ -225,3 +230,26 @@ class ContentExpiryMonkeyPatchTestCase(CMSTestCase):
         self.assertEqual(ContentExpiry.objects.count(), 2)
         self.assertEqual(ContentExpiry.objects.first().compliance_number,
                          ContentExpiry.objects.last().compliance_number)
+
+    def test_extended_versioning_admin_additional_content_settings_icon(self):
+        """
+        The additional content settings icon should be added to the version table
+        """
+        endpoint = self.get_admin_url(ContentExpiry, "change", self.content_expiry_primary.pk)
+        additional_settings_control = render_to_string(
+            'djangocms_content_expiry/admin/icons/additional_content_settings_icon.html',
+            {
+                "url": f"{endpoint}?_popup=1"
+            }
+        )
+
+        querystring = "?poll=1"
+        url = self.get_admin_url(self.versionable.version_model_proxy, "changelist") + querystring
+
+        response = self.client.get(
+            url
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, additional_settings_control, html=True)
+

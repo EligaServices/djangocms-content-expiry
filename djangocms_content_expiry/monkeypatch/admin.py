@@ -43,6 +43,9 @@ def get_state_actions(func):
     return inner
 
 
+admin.VersionAdmin.get_state_actions = get_state_actions(admin.VersionAdmin.get_state_actions)
+
+
 def compliance_number(self, obj):
     version = ContentExpiry.objects.filter(version=obj.pk)
     if version:
