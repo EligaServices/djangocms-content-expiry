@@ -13,7 +13,7 @@ from djangocms_content_expiry.models import ContentExpiry
 
 def _get_expiry_link(self, obj, request):
     """
-    Generate an content expiry link for the Versioning Admin
+    Generate a content expiry link for the Versioning Admin
     """
     expiry_url = reverse(
         "admin:{app}_{model}_change".format(
@@ -22,7 +22,7 @@ def _get_expiry_link(self, obj, request):
         args=(obj.contentexpiry.pk,),
     )
     return render_to_string(
-        'djangocms_content_expiry/calendar_icon.html',
+        'djangocms_content_expiry/admin/icons/additional_content_settings_icon.html',
         {
             "url": f"{expiry_url}?_popup=1",
         }
@@ -34,7 +34,7 @@ admin.VersionAdmin._get_expiry_link = _get_expiry_link
 
 def get_state_actions(func):
     """
-    Add custom Version Lock actions to Versioning state actions
+    Add additional content settings action to Versioning state actions
     """
     def inner(self, *args, **kwargs):
         state_list = func(self, *args, **kwargs)
