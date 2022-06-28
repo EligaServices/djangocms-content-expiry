@@ -110,7 +110,8 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
 
         draft_endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
-        draft_expected_content = f'<input type="text" name="compliance_number" value="{content_expiry.compliance_number}" ' \
+        draft_expected_content = f'<input type="text" name="compliance_number" ' \
+                                 f'value="{content_expiry.compliance_number}" ' \
                                  f'class="vTextField" maxlength="15" id="id_compliance_number">'
 
         with self.login_user_context(self.get_superuser()):
