@@ -5,7 +5,7 @@ Changelog
 unreleased
 ==========
 
-1.4.0 (2022-06-24)
+1.4.0 (2022-06-29)
 ==================
 * feat: Expiry field removed from version table and replaced with compliance number. Added additional content settings action to version table
 * fix: Changed model title to uppercase
