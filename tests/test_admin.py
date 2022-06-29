@@ -11,12 +11,7 @@ from cms.models import PageContent
 from cms.test_utils.testcases import CMSTestCase
 
 from bs4 import BeautifulSoup
-from djangocms_versioning.constants import (
-    ARCHIVED,
-    DRAFT,
-    PUBLISHED,
-    UNPUBLISHED
-)
+from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISHED
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
 from djangocms_content_expiry.conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
@@ -174,7 +169,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
         unpublished_expected_response = f'<div class="readonly">{content_expiry.compliance_number}</div>'
 
         with self.login_user_context(self.get_superuser()):
-           response = self.client.get(endpoint)
+            response = self.client.get(endpoint)
 
         self.assertEqual(response.status_code, 200)
 
