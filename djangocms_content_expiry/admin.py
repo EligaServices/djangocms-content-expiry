@@ -295,6 +295,17 @@ class ContentExpiryAdmin(admin.ModelAdmin):
             return self.readonly_fields + ('compliance_number',)
         return self.readonly_fields
 
+    def get_fieldsets(self, request, obj=None):
+        """
+        Form field ordering should remain constant when compliance number is read-only
+        :param request: Request object
+        :param obj: Content expiry object
+        :return: Form fieldsets
+        """
+        fieldsets = super(ContentExpiryAdmin, self).get_fieldsets(request, obj)
+        fieldsets[0][1]['fields'] = ['compliance_number', 'created_by', 'version', 'expires']
+        return fieldsets
+
 
 @admin.register(DefaultContentExpiryConfiguration)
 class DefaultContentExpiryConfigurationAdmin(admin.ModelAdmin):
