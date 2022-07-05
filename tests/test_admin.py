@@ -193,7 +193,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
 
     def test_change_form_fieldset_ordering_published(self):
         """
-        The change form should in same order starting with compliance number when in published
+        The change form should remain in same order, starting with compliance number when in published
         """
         content_expiry = PollContentExpiryFactory(version__state=PUBLISHED)
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
