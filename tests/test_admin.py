@@ -180,31 +180,31 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
 
     def test_change_form_fieldset_ordering_draft(self):
         """
-        The change form should in same order starting with compliance number when in draft
+        The change form should remain in same order, starting with compliance number when in draft
         """
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
-        expexted_fieldset = CONTENT_EXPIRY_FIELDSETS
+        expected_fieldset = CONTENT_EXPIRY_FIELDSETS
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
 
         fieldsets = response.context_data['adminform'].fieldsets[0][1]['fields']
 
-        self.assertEqual(expexted_fieldset, fieldsets)
+        self.assertEqual(expected_fieldset, fieldsets)
 
     def test_change_form_fieldset_ordering_published(self):
         """
-        The change form should in same order starting with compliance number when in published
+        The change form should remain in same order, starting with compliance number when in published
         """
         content_expiry = PollContentExpiryFactory(version__state=PUBLISHED)
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
-        expexted_fieldset = CONTENT_EXPIRY_FIELDSETS
+        expected_fieldset = CONTENT_EXPIRY_FIELDSETS
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
 
         fieldsets = response.context_data['adminform'].fieldsets[0][1]['fields']
 
-        self.assertEqual(expexted_fieldset, fieldsets)
+        self.assertEqual(expected_fieldset, fieldsets)
 
 
 class ContentExpiryChangelistTestCase(CMSTestCase):
