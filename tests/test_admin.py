@@ -189,7 +189,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
 
         fieldsets = response.context_data['adminform'].fieldsets[0][1]['fields']
 
-        self.assertEqual(expexted_fieldset, fieldsets)
+        self.assertEqual(expected_fieldset, fieldsets)
 
     def test_change_form_fieldset_ordering_published(self):
         """
