@@ -13,8 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import get_preview_url
 
-from .constants import CONTENT_EXPIRY_FIELDSETS
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
+from .constants import CONTENT_EXPIRY_FIELDSETS
 from .filters import (
     AuthorFilter,
     ComplianceNumberFilter,
