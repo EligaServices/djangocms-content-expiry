@@ -203,7 +203,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
 
         fieldsets = response.context_data['adminform'].fieldsets[0][1]['fields']
 
-        self.assertEqual(expexted_fieldset, fieldsets)
+        self.assertEqual(expected_fieldset, fieldsets)
 
 
 class ContentExpiryChangelistTestCase(CMSTestCase):
