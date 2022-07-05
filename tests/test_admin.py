@@ -15,6 +15,7 @@ from djangocms_versioning.constants import ARCHIVED, DRAFT, PUBLISHED, UNPUBLISH
 
 from djangocms_content_expiry.admin import ContentExpiryAdmin
 from djangocms_content_expiry.conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
+from djangocms_content_expiry.constants import CONTENT_EXPIRY_FIELDSETS
 from djangocms_content_expiry.forms import ForeignKeyReadOnlyWidget
 from djangocms_content_expiry.models import (
     ContentExpiry,
@@ -183,7 +184,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
         """
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
-        expexted_fieldset = ['compliance_number', 'created_by', 'version', 'expires']
+        expexted_fieldset = CONTENT_EXPIRY_FIELDSETS
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
 
@@ -197,7 +198,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
         """
         content_expiry = PollContentExpiryFactory(version__state=PUBLISHED)
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
-        expexted_fieldset = ['compliance_number', 'created_by', 'version', 'expires']
+        expexted_fieldset = CONTENT_EXPIRY_FIELDSETS
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
 

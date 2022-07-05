@@ -13,6 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_versioning.constants import DRAFT, PUBLISHED
 from djangocms_versioning.helpers import get_preview_url
 
+from .constants import CONTENT_EXPIRY_FIELDSETS
 from .conf import DEFAULT_CONTENT_EXPIRY_EXPORT_DATE_FORMAT
 from .filters import (
     AuthorFilter,
@@ -303,7 +304,7 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         :return: Form fieldsets
         """
         fieldsets = super(ContentExpiryAdmin, self).get_fieldsets(request, obj)
-        fieldsets[0][1]['fields'] = ['compliance_number', 'created_by', 'version', 'expires']
+        fieldsets[0][1]['fields'] = CONTENT_EXPIRY_FIELDSETS
         return fieldsets
 
 
