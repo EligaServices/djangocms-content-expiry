@@ -183,7 +183,7 @@ class ContentExpiryChangeFormTestCase(CMSTestCase):
         """
         content_expiry = PollContentExpiryFactory(version__state=DRAFT)
         endpoint = self.get_admin_url(ContentExpiry, "change", content_expiry.pk)
-        expexted_fieldset = ['compliance_number', 'created_by', 'version', 'expires']
+        expected_fieldset = ['compliance_number', 'created_by', 'version', 'expires']
         with self.login_user_context(self.get_superuser()):
             response = self.client.get(endpoint)
 
