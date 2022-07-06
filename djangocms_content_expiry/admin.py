@@ -35,6 +35,11 @@ class ContentExpiryAdmin(admin.ModelAdmin):
                    VersionStateFilter, AuthorFilter)
     form = ContentExpiryForm
     change_list_template = "djangocms_content_expiry/admin/change_list.html"
+    fieldsets = (
+        (None, {
+            'fields': CONTENT_EXPIRY_FIELDSETS,
+        }),
+    )
 
     class Media:
         css = {
@@ -295,17 +300,6 @@ class ContentExpiryAdmin(admin.ModelAdmin):
         if obj and obj.version.state != DRAFT:
             return self.readonly_fields + ('compliance_number',)
         return self.readonly_fields
-
-    def get_fieldsets(self, request, obj=None):
-        """
-        Form field ordering should remain constant when compliance number is read-only
-        :param request: Request object
-        :param obj: Content expiry object
-        :return: Form fieldsets
-        """
-        fieldsets = super(ContentExpiryAdmin, self).get_fieldsets(request, obj)
-        fieldsets[0][1]['fields'] = CONTENT_EXPIRY_FIELDSETS
-        return fieldsets
 
 
 @admin.register(DefaultContentExpiryConfiguration)
