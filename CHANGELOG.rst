@@ -4,6 +4,7 @@ Changelog
 
 unreleased
 ==========
+* fix: Fixed inconsistency field UI behaviour
 
 1.4.1 (2022-07-06)
 ==================
