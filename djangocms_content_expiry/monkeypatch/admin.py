@@ -25,6 +25,7 @@ def _get_expiry_link(self, obj, request):
         'djangocms_content_expiry/admin/icons/additional_content_settings_icon.html',
         {
             "url": f"{expiry_url}?_to_field=id&_popup=1",
+            "field_id": f"contentexpiry_{obj.pk}",
         }
     )
 
