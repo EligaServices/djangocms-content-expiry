@@ -42,7 +42,6 @@ class ContentExpiryAdmin(admin.ModelAdmin):
     )
 
     class Media:
-        js = ('admin/js/jquery.init.js',)
         css = {
             'all': (
                 'djangocms_content_expiry/css/actions.css',
