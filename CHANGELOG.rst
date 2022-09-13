@@ -4,6 +4,13 @@ Changelog
 
 unreleased
 ==========
+
+1.4.3 (2022-07-08)
+==================
+* fix: broken pop ups not closing on save
+
+1.4.2 (2022-07-07)
+==================
 * fix: Fixed inconsistency in Content Expiry form field UI behaviour for the compliance number
 
 1.4.1 (2022-07-06)
