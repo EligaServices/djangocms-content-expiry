@@ -21,6 +21,7 @@ HELPER_SETTINGS = {
         "djangocms_content_expiry": None,
     },
     "CMS_PERMISSION": True,
+    "CMS_CONFIRM_VERSION4": True,
     "LANGUAGES": (
         ("en", "English"),
         ("de", "German"),
